@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-font="nur">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#05070d">
+<title>Nur — a verse for where you are</title>
+<meta name="description" content="One verse of the Qur'an at a time, matched to how you feel.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@200;300;400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --glow:#8fa7ff;
+  --ink:#f4f6ff; --ink-dim:rgba(244,246,255,.58); --ink-faint:rgba(244,246,255,.34);
+  --line:rgba(244,246,255,.14); --panel:rgba(6,9,18,.86); --field:rgba(255,255,255,.05);
+  --verse-size:clamp(1.42rem, 3.4vw + .55rem, 2.6rem);
+  --f-display:'Spectral',Georgia,serif; --f-ui:'Jost',system-ui,sans-serif;
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --scene-filter:none; --bg:#05070d;
+}
+html[data-theme="light"]{
+  --ink:#1c1813; --ink-dim:rgba(28,24,19,.66); --ink-faint:rgba(28,24,19,.42);
+  --line:rgba(28,24,19,.17); --panel:rgba(247,244,237,.92); --field:rgba(28,24,19,.05);
+  --scene-filter:invert(1) hue-rotate(180deg) saturate(.72) brightness(1.05); --bg:#f7f4ed;
+}
+html[data-font="classic"]{--f-display:'EB Garamond',Georgia,serif;--f-ui:'Inter',system-ui,sans-serif}
+html[data-font="modern"]{--f-display:'Inter',system-ui,sans-serif;--f-ui:'Inter',system-ui,sans-serif}
+html[data-font="scribe"]{--f-display:'Amiri',Georgia,serif;--f-ui:'Jost',system-ui,sans-serif}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-weight:300;
+  overflow:hidden;overscroll-behavior:none;-webkit-font-smoothing:antialiased;
+  transition:background .5s var(--ease),color .5s var(--ease)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:1px solid var(--ink-dim);outline-offset:5px;border-radius:2px}
+
+#scene{position:fixed;inset:0;z-index:0;display:block;filter:var(--scene-filter);transition:filter .5s var(--ease)}
+#veil{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(ellipse 78% 58% at 50% 46%, rgba(4,6,13,.58), rgba(4,6,13,.14) 62%, rgba(4,6,13,.68) 100%)}
+html[data-theme="light"] #veil{background:radial-gradient(ellipse 80% 60% at 50% 46%, rgba(255,253,247,.66), rgba(255,253,247,.22) 62%, rgba(255,253,247,.72) 100%)}
+
+#stage{position:fixed;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;
+  padding:clamp(26px,7vw,80px) clamp(22px,6vw,64px) 132px;cursor:pointer;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;touch-action:pan-y}
+#stage::-webkit-scrollbar{display:none}
+.slab{width:100%;max-width:min(56ch,92vw);margin:auto 0;text-align:center;
+  transition:opacity .6s var(--ease), transform .6s var(--ease), filter .6s var(--ease)}
+.slab.out{opacity:0;transform:translateY(-14px) scale(.995);filter:blur(6px)}
+.slab.in{opacity:0;transform:translateY(14px);filter:blur(6px)}
+
+#verse{font-family:var(--f-display);font-weight:300;font-size:var(--verse-size);
+  line-height:1.5;letter-spacing:.004em;text-wrap:balance;max-width:34ch;margin:0 auto;
+  text-shadow:0 1px 34px rgba(0,0,0,.5)}
+html[data-theme="light"] #verse{text-shadow:0 1px 26px rgba(255,255,255,.7)}
+#verse .gloss{opacity:.62}
+#verse.rtl{direction:rtl;line-height:1.85}
+#verse.arabic{font-family:'Amiri',serif;font-size:clamp(1.7rem,4.4vw,3rem);line-height:1.95}
+#ref{margin-top:clamp(20px,3.4vh,34px);font-size:.66rem;font-weight:400;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--ink-faint)}
+#ref .sep{opacity:.4;margin:0 .55em}
+#ref .liked{color:var(--glow);margin-inline-start:.6em}
+
+.story #verse{font-size:clamp(1.02rem,1.5vw + .62rem,1.28rem);line-height:1.78;max-width:52ch;text-align:start}
+.story .story-title{display:block;font-family:var(--f-ui);font-weight:400;font-size:.72rem;
+  letter-spacing:.34em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:clamp(18px,3vh,28px);text-align:start}
+.story .story-hold{display:block;margin-top:22px;padding-top:20px;border-top:1px solid var(--line);
+  font-family:var(--f-display);font-style:italic;font-weight:300;color:var(--ink-dim);font-size:.98em;text-align:start}
+.story #ref{text-align:start}
+.pulse{display:block;height:1px;width:112px;margin:0 auto;background:var(--ink-faint);animation:breathe 1.5s ease-in-out infinite}
+
+#hint{position:fixed;left:0;right:0;bottom:calc(96px + env(safe-area-inset-bottom));z-index:3;
+  text-align:center;font-size:.6rem;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-faint);
+  opacity:0;transition:opacity .6s;pointer-events:none}
+#hint.on{opacity:.75}
+
+#pill{position:fixed;top:max(20px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);
+  z-index:4;display:none;align-items:center;gap:10px;padding:8px 10px 8px 16px;
+  border:1px solid var(--line);border-radius:999px;background:var(--field);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  font-size:.66rem;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-dim);max-width:80vw}
+#pill.on{display:flex}
+#pill span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#pill button{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:.8rem;
+  line-height:1;color:var(--ink-faint);border:1px solid transparent;flex:0 0 auto}
+#pill button:hover{color:var(--ink);border-color:var(--line)}
+
+#heartfx{position:fixed;inset:0;z-index:9;display:grid;place-items:center;pointer-events:none;opacity:0}
+#heartfx svg{width:min(38vw,190px);height:auto;color:var(--glow)}
+#heartfx.beat{animation:heartbeat 1.05s var(--ease) forwards}
+@keyframes heartbeat{
+  0%{opacity:0;transform:scale(.55)} 22%{opacity:1;transform:scale(1.08)}
+  40%{transform:scale(.98)} 62%{opacity:.9;transform:scale(1.02)}
+  100%{opacity:0;transform:scale(1.16)}
+}
+
+#dotwrap{position:fixed;left:50%;bottom:max(30px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:5}
+#dot{position:relative;display:grid;place-items:center;width:52px;height:52px;border-radius:50%}
+#dot::after{content:"";width:9px;height:9px;border-radius:50%;background:var(--ink);
+  box-shadow:0 0 10px var(--glow), 0 0 34px var(--glow);border:1px solid transparent;
+  transition:width .5s var(--ease),height .5s var(--ease),background .4s,border-color .4s,box-shadow .5s;
+  animation:breathe 5s ease-in-out infinite}
+#dot[aria-expanded="true"]::after{width:26px;height:26px;background:transparent;
+  border-color:var(--ink);box-shadow:0 0 20px var(--glow);animation:none}
+
+#bloom{position:fixed;left:0;right:0;bottom:0;z-index:4;display:flex;flex-direction:column;
+  align-items:center;gap:0;padding-bottom:calc(92px + env(safe-area-inset-bottom));pointer-events:none}
+#bloom button{pointer-events:auto;opacity:0;transform:translateY(10px);padding:10px 26px;border-radius:999px;
+  font-size:.7rem;font-weight:400;letter-spacing:.28em;text-transform:uppercase;color:var(--ink-dim);
+  transition:opacity .4s var(--ease),transform .4s var(--ease),color .25s}
+#bloom button:hover{color:var(--ink)}
+#bloom.open button{opacity:1;transform:translateY(0)}
+#bloom.open button:nth-child(6){transition-delay:.02s}
+#bloom.open button:nth-child(5){transition-delay:.06s}
+#bloom.open button:nth-child(4){transition-delay:.10s}
+#bloom.open button:nth-child(3){transition-delay:.14s}
+#bloom.open button:nth-child(2){transition-delay:.18s}
+#bloom.open button:nth-child(1){transition-delay:.22s}
+#scrim{position:fixed;inset:0;z-index:3;display:none}
+#scrim.on{display:block}
+
+.panel{position:fixed;inset:0;z-index:6;display:none;flex-direction:column;background:var(--panel);
+  backdrop-filter:blur(26px) saturate(120%);-webkit-backdrop-filter:blur(26px) saturate(120%)}
+.panel.on{display:flex;animation:panelIn .44s var(--ease) both}
+@keyframes panelIn{from{opacity:0;transform:translateY(16px);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
+.phead{display:flex;align-items:center;gap:16px;flex:0 0 auto;
+  padding:max(18px,env(safe-area-inset-top)) clamp(18px,5vw,44px) 18px;border-bottom:1px solid var(--line)}
+.back{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);
+  color:var(--ink-dim);flex:0 0 auto}
+.back:hover{color:var(--ink)}
+.ptitle{font-size:.7rem;letter-spacing:.34em;text-transform:uppercase;color:var(--ink-dim)}
+.pbody{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:clamp(24px,5vh,44px) clamp(18px,5vw,44px) calc(56px + env(safe-area-inset-bottom))}
+.pinner{max-width:760px;margin:0 auto}
+.lede{font-family:var(--f-display);font-weight:300;font-size:1.06rem;line-height:1.7;color:var(--ink-dim);
+  margin-bottom:clamp(20px,4vh,32px);max-width:46ch}
+
+.gtitle{font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-faint);
+  margin:30px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.gtitle:first-of-type{margin-top:0}
+.moods{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:10px}
+.mood{position:relative;text-align:start;padding:18px 16px 16px;border:1px solid var(--line);border-radius:14px;
+  background:var(--field);transition:border-color .3s,transform .3s var(--ease)}
+.mood:hover{border-color:var(--ink-dim);transform:translateY(-2px)}
+.mood .m-n{display:block;font-family:var(--f-display);font-size:1.1rem;font-weight:300}
+.mood .m-s{display:block;margin-top:5px;font-size:.7rem;letter-spacing:.06em;color:var(--ink-faint);line-height:1.5}
+.mood .m-c{display:block;margin-top:8px;font-size:.58rem;letter-spacing:.2em;color:var(--ink-faint);opacity:.7}
+.mood .m-d{position:absolute;top:15px;inset-inline-end:15px;width:5px;height:5px;border-radius:50%}
+.wide{width:100%;padding:16px 18px;border:1px dashed var(--line);border-radius:14px;text-align:start;
+  margin-bottom:24px;transition:border-color .3s}
+.wide:hover{border-color:var(--ink-dim)}
+.wide .w-n{display:block;font-family:var(--f-display);font-size:1.06rem}
+.wide .w-s{display:block;margin-top:4px;font-size:.72rem;color:var(--ink-faint);line-height:1.5}
+
+.search,.ta{width:100%;padding:13px 16px;background:var(--field);border:1px solid var(--line);
+  border-radius:10px;color:var(--ink);font-size:.94rem;font-family:var(--f-ui)}
+.search{margin-bottom:20px}
+.ta{min-height:110px;resize:vertical;line-height:1.6}
+.search::placeholder,.ta::placeholder{color:var(--ink-faint)}
+.search:focus,.ta:focus{outline:none;border-color:var(--ink-dim)}
+.cta{margin-top:14px;padding:12px 24px;border:1px solid var(--ink-dim);border-radius:999px;
+  font-size:.68rem;letter-spacing:.26em;text-transform:uppercase;color:var(--ink)}
+.cta[disabled]{opacity:.45;cursor:default}
+
+.langs{display:flex;flex-direction:column}
+.lang{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:13px 4px;
+  border-bottom:1px solid var(--line);text-align:start;transition:padding-inline-start .3s var(--ease)}
+.lang:hover{padding-inline-start:10px}
+.lang .l-n{font-family:var(--f-display);font-size:1.04rem;font-weight:300}
+.lang .l-t{font-size:.68rem;letter-spacing:.08em;color:var(--ink-faint);text-align:end;flex:0 0 auto;max-width:54%}
+.lang[aria-current="true"] .l-n::after{content:" ·";color:var(--glow)}
+.note{font-size:.78rem;line-height:1.7;color:var(--ink-faint);letter-spacing:.02em;
+  border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:18px}
+.note b{color:var(--ink-dim);font-weight:400}
+
+.row{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px 0;border-bottom:1px solid var(--line)}
+.row .r-n{font-family:var(--f-display);font-size:1.06rem;font-weight:300}
+.row .r-s{font-size:.72rem;letter-spacing:.03em;color:var(--ink-faint);margin-top:4px;line-height:1.55;max-width:44ch}
+.seg{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;flex:0 0 auto}
+.seg button{padding:8px 14px;font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);
+  transition:background .25s,color .25s;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.foot{margin-top:34px;font-size:.74rem;line-height:1.9;color:var(--ink-faint);letter-spacing:.02em}
+.foot a{color:var(--ink-dim)}
+
+.hlist{display:flex;flex-direction:column;gap:10px}
+.hitem{display:flex;align-items:flex-start;gap:14px;padding:16px;border:1px solid var(--line);border-radius:14px;
+  background:var(--field);text-align:start;width:100%}
+.hitem .h-t{font-family:var(--f-display);font-size:1rem;font-weight:300;line-height:1.6;flex:1 1 auto}
+.hitem .h-r{display:block;margin-top:8px;font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-faint)}
+.hitem .h-x{flex:0 0 auto;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);
+  color:var(--ink-faint);display:grid;place-items:center;font-size:.8rem}
+.empty{font-family:var(--f-display);font-size:1.04rem;color:var(--ink-dim);line-height:1.7;max-width:40ch}
+
+/* sheets */
+.sheet{position:fixed;inset:0;z-index:8;display:none;align-items:flex-end;justify-content:center}
+.sheet.on{display:flex}
+.sheet .sbg{position:absolute;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+html[data-theme="light"] .sheet .sbg{background:rgba(120,110,95,.28)}
+.sheet .scard{position:relative;width:min(600px,100%);max-height:82vh;overflow-y:auto;
+  background:var(--panel);border:1px solid var(--line);border-radius:20px 20px 0 0;
+  padding:26px clamp(20px,5vw,32px) calc(30px + env(safe-area-inset-bottom));
+  animation:sheetIn .38s var(--ease) both;backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px)}
+@media(min-width:720px){.sheet{align-items:center}.sheet .scard{border-radius:20px}}
+@keyframes sheetIn{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+.shead{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
+.shead h3{font-size:.66rem;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-dim);font-weight:400}
+.shead button{width:28px;height:28px;border-radius:50%;border:1px solid var(--line);color:var(--ink-faint);
+  display:grid;place-items:center;font-size:.8rem}
+.sbody{font-family:var(--f-display);font-weight:300;font-size:1rem;line-height:1.78;color:var(--ink)}
+.sbody p{margin-bottom:12px}
+.sbody .quiet{color:var(--ink-faint);font-family:var(--f-ui);font-size:.8rem;line-height:1.7}
+
+@keyframes breathe{0%,100%{opacity:.42}50%{opacity:1}}
+@media (max-width:600px){
+  #stage{padding-bottom:120px}
+  .moods{grid-template-columns:repeat(2,1fr);gap:8px}
+  .row{flex-direction:column;align-items:flex-start;gap:12px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;transition-duration:.12s !important}
+  #dot::after{animation:none;opacity:1}
+  #heartfx.beat{animation-duration:.9s !important}
+}
+</style>
+</head>
+<body>
+
+<canvas id="scene" aria-hidden="true"></canvas>
+<div id="veil" aria-hidden="true"></div>
+
+<main id="stage" role="button" tabindex="0" aria-label="Show another verse">
+  <div class="slab" id="slab">
+    <p id="verse"><span class="pulse"></span></p>
+    <p id="ref"></p>
+  </div>
+</main>
+
+<div id="hint"></div>
+
+<div id="pill" aria-live="polite">
+  <span id="pill-label"></span>
+  <button id="pill-clear" aria-label="Clear">✕</button>
+</div>
+
+<div id="heartfx" aria-hidden="true">
+  <svg viewBox="0 0 100 92" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M50 86C50 86 8 60.5 8 33.5 8 19.4 19.2 8 33.1 8 41.3 8 47.4 12.4 50 17.6 52.6 12.4 58.7 8 66.9 8 80.8 8 92 19.4 92 33.5 92 60.5 50 86 50 86Z"
+      fill="currentColor" fill-opacity="0.16" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" transform="translate(-4,0)"/>
+    <path d="M50 74C50 74 22 56 22 37.5 22 28.4 29 21 37.8 21 43 21 47.2 23.9 50 28 52.8 23.9 57 21 62.2 21 71 21 78 28.4 78 37.5 78 56 50 74 50 74Z"
+      stroke="currentColor" stroke-width="1.2" stroke-opacity=".55" fill="none"/>
+    <circle cx="50" cy="44" r="3" fill="currentColor" fill-opacity=".5"/>
+  </svg>
+</div>
+
+<div id="scrim"></div>
+
+<nav id="bloom" aria-hidden="true">
+  <button data-open="about" data-i18n="menu.about">About</button>
+  <button data-open="settings" data-i18n="menu.settings">Settings</button>
+  <button data-open="language" data-i18n="menu.language">Language</button>
+  <button data-open="hearted" data-i18n="menu.hearted">Hearted</button>
+  <button data-open="stories" data-i18n="menu.stories">Stories</button>
+  <button data-open="mood" data-i18n="menu.mood">Mood</button>
+</nav>
+
+<div id="dotwrap"><button id="dot" aria-expanded="false" aria-controls="bloom" aria-label="Open menu"></button></div>
+
+<section class="panel" id="p-mood">
+  <div class="phead"><button class="back" data-close aria-label="Back">←</button><h2 class="ptitle" data-i18n="mood.title">Mood</h2></div>
+  <div class="pbody"><div class="pinner">
+    <p class="lede" data-i18n="mood.lede">Name where you are right now. You'll be given verses that meet you there, in a different order every time.</p>
+    <button class="wide" id="sharemood">
+      <span class="w-n" data-i18n="mood.share">Say it in your own words</span>
+      <span class="w-s" data-i18n="mood.shareSub">Write a sentence about how you are, and the right verses will be chosen for it.</span>
+    </button>
+    <div id="moodgrid"></div>
+  </div></div>
+</section>
+
+<section class="panel" id="p-hearted">
+  <div class="phead"><button class="back" data-close aria-label="Back">←</button><h2 class="ptitle" data-i18n="menu.hearted">Hearted</h2></div>
+  <div class="pbody"><div class="pinner"><div id="heartlist"></div></div></div>
+</section>
+
+<section class="panel" id="p-language">
+  <div class="phead"><button class="back" data-close aria-label="Back">←</button><h2 class="ptitle" data-i18n="menu.language">Language</h2></div>
+  <div class="pbody"><div class="pinner">
+    <p class="lede" data-i18n="lang.lede">Every option here is a published scholarly translation, not a machine translation, so the meaning of the verse stays sound in any language.</p>
+    <div class="note" id="langnote"></div>
+    <input class="search" id="langsearch" type="search" autocomplete="off" aria-label="Search languages">
+    <div class="langs" id="langlist"></div>
+  </div></div>
+</section>
+
+<section class="panel" id="p-settings">
+  <div class="phead"><button class="back" data-close aria-label="Back">←</button><h2 class="ptitle" data-i18n="menu.settings">Settings</h2></div>
+  <div class="pbody"><div class="pinner" id="setbody"></div></div>
+</section>
+
+<section class="panel" id="p-about">
+  <div class="phead"><button class="back" data-close aria-label="Back">←</button><h2 class="ptitle" data-i18n="menu.about">About</h2></div>
+  <div class="pbody"><div class="pinner" id="aboutbody"></div></div>
+</section>
+
+<div class="sheet" id="sheet">
+  <div class="sbg" data-sclose></div>
+  <div class="scard">
+    <div class="shead"><h3 id="sheet-title"></h3><button data-sclose aria-label="Close">✕</button></div>
+    <div class="sbody" id="sheet-body"></div>
+  </div>
+</div>
+
+<script>
+const SURAHS=["Al-Fatihah","Al-Baqarah","Ali 'Imran","An-Nisa","Al-Ma'idah","Al-An'am","Al-A'raf","Al-Anfal","At-Tawbah","Yunus","Hud","Yusuf","Ar-Ra'd","Ibrahim","Al-Hijr","An-Nahl","Al-Isra","Al-Kahf","Maryam","Ta-Ha","Al-Anbiya","Al-Hajj","Al-Mu'minun","An-Nur","Al-Furqan","Ash-Shu'ara","An-Naml","Al-Qasas","Al-'Ankabut","Ar-Rum","Luqman","As-Sajdah","Al-Ahzab","Saba","Fatir","Ya-Sin","As-Saffat","Sad","Az-Zumar","Ghafir","Fussilat","Ash-Shura","Az-Zukhruf","Ad-Dukhan","Al-Jathiyah","Al-Ahqaf","Muhammad","Al-Fath","Al-Hujurat","Qaf","Adh-Dhariyat","At-Tur","An-Najm","Al-Qamar","Ar-Rahman","Al-Waqi'ah","Al-Hadid","Al-Mujadilah","Al-Hashr","Al-Mumtahanah","As-Saff","Al-Jumu'ah","Al-Munafiqun","At-Taghabun","At-Talaq","At-Tahrim","Al-Mulk","Al-Qalam","Al-Haqqah","Al-Ma'arij","Nuh","Al-Jinn","Al-Muzzammil","Al-Muddaththir","Al-Qiyamah","Al-Insan","Al-Mursalat","An-Naba","An-Nazi'at","'Abasa","At-Takwir","Al-Infitar","Al-Mutaffifin","Al-Inshiqaq","Al-Buruj","At-Tariq","Al-A'la","Al-Ghashiyah","Al-Fajr","Al-Balad","Ash-Shams","Al-Layl","Ad-Duha","Ash-Sharh","At-Tin","Al-'Alaq","Al-Qadr","Al-Bayyinah","Az-Zalzalah","Al-'Adiyat","Al-Qari'ah","At-Takathur","Al-'Asr","Al-Humazah","Al-Fil","Quraysh","Al-Ma'un","Al-Kawthar","Al-Kafirun","An-Nasr","Al-Masad","Al-Ikhlas","Al-Falaq","An-Nas"];
+const MOODS=[["anxious","Anxious","racing, tight-chested","#7d8cff","feeling"],["heavy","Heavy-hearted","grief that sits still","#5f7fb0","feeling"],["afraid","Afraid","something ahead of you","#8f7dd6","feeling"],["alone","Alone","unseen, unheard","#6fa6c9","feeling"],["lost","Lost","no clear next step","#c39a6a","feeling"],["worn","Worn out","running on empty","#9d8f7a","feeling"],["angry","Angry","held tight, ready to go","#c47a63","feeling"],["guilty","Guilty","carrying what you did","#a97f8e","feeling"],["hopeful","Hopeful","something is turning","#e0a95e","feeling"],["grateful","Grateful","full, and knowing it","#e8c46a","feeling"],["wonder","In wonder","struck by how it all is","#79c7c0","feeling"],["peace","At peace","settled, quiet","#8fd0a8","feeling"],["lust","Tempted","desire pulling at you","#b57ba6","struggle"],["envy","Envious","measuring against others","#8fa06a","struggle"],["pride","Proud","standing a little too tall","#c8926a","struggle"],["greed","Holding tight","wealth with a grip on you","#bfa15c","struggle"],["gossip","Loose tongue","words that got away","#9b93b8","struggle"],["grudge","Unforgiving","holding what they did","#a8756c","struggle"],["lazy","Slipping","prayer coming last","#8d8b9e","struggle"],["doubt","Doubting","faith gone thin","#6f8fa8","struggle"],["love","Love and marriage","someone in your life","#d4879b","life"],["parents","Parents","the two who raised you","#c9a37e","life"],["sick","Unwell","in the body, or waiting on news","#7fb3ab","life"],["money","Money worry","rent, work, provision","#a9a06e","life"],["wronged","Wronged","treated unjustly","#b0757f","life"],["newstart","Starting again","after everything","#7fbf94","life"],["death","Facing loss","yours, or someone's","#7e86a0","life"]];
+/* 377 verses, Rowwad Translation Center edition, bundled so a verse never needs a network */
+const V=[[1,5,"lost","birds","You alone we worship, and You alone we ask for help"],[1,6,"lost","path","Guide us to the straight path"],[2,2,"doubt lost","mountains","This is the Book about which there is no doubt, a guidance for the righteous"],[2,38,"afraid","mist","We said, “Go down all of you from here! Then when My guidance comes to you; whoever follows My guidance, they will have no fear, nor will they grieve"],[2,45,"anxious worn","garden","Seek help through patience and prayer. It is strenuous except for the humble"],[2,112,"afraid peace","dawn","On the contrary, whoever submits himself to Allah and is a doer of good will have his reward with his Lord. They will have no fear, nor will they grieve"],[2,152,"alone grateful","mist","Therefore remember Me; I will remember you. Be grateful to Me, and do not be ungrateful"],[2,153,"anxious worn","hills","O you who believe, seek help in patience and prayer, for Allah is with those who are patient"],[2,154,"death","mountains","And do not say that those martyred in Allah’s way are dead. Rather, they are alive, but you do not perceive it"],[2,155,"heavy sick","garden","We will surely test you with something of fear and famine, and loss of property, lives and fruits. But give glad tidings to those who are patient"],[2,156,"death heavy","sea","Those when afflicted with a disaster, they say, “We belong to Allah, and to Him we will return.”"],[2,157,"heavy","dunes","They are those upon whom are blessings and mercy from their Lord, and it is they who are guided"],[2,186,"alone hopeful","night","When My slaves ask you concerning Me, I am indeed near. I respond to the call of the supplicant when he calls upon Me; so they should respond to Me and believe in Me, so that they may be guided"],[2,238,"lazy","spring","Be mindful of the prayers, especially the middle prayer; and stand before Allah in complete devotion"],[2,257,"lost","light","Allah is the Protector of those who believe; He brings them out of the depths of darkness into the light. As for those who disbelieve, their protectors are false gods; they bring them out from the light into the depths of darkness. They are the people of the Fire; they will abide therein forever"],[2,261,"greed","wheat","The likeness of those who spend their wealth in the way of Allah is like a grain that sprouts seven ears, each ear bearing a hundred grains. And Allah gives multiple [rewards] for whom He wills. And Allah is All-Encompassing, All-Knowing"],[2,263,"grudge","moon","Kind words and forgiveness are better than charity followed by hurt. And Allah is Self-Sufficient, Most Forbearing"],[2,268,"greed money","mountains","Satan threatens you with poverty and orders you to commit shameful acts, but Allah promises you forgiveness and bounty from Him. And Allah is All-Encompassing, All-Knowing"],[2,274,"greed","night","Those who spend their wealth in charity, day and night, in secret and in public; they will have their reward with their Lord, and they will have no fear, nor will they grieve"],[2,277,"afraid peace","cave","Those who believe, do righteous deeds, establish prayer, and give zakah, will have their reward with their Lord; and they will have no fear, nor will they grieve"],[3,14,"lust","bees","The love of desirable things has been made appealing to people, such as women, children, hoarded heaps of gold and silver, branded fine horses, livestock, and tilled land. These are the pleasures of the life of this world, but with Allah is the best place of return"],[3,26,"money","mist","Say, “O Allah, Lord of the dominion, You give dominion to whom You will and take it away from whom You will; You honor whom You will and humiliate whom You will. All good is in Your Hand. You are Most Capable of all things"],[3,31,"guilty","dunes","Say, “If you love Allah then follow me; Allah will love you and forgive you your sins: for Allah is All-Forgiving, Most Merciful.”"],[3,38,"alone","spring","Thereupon Zachariah prayed to his Lord, saying, “My Lord, grant me by Your grace virtuous offspring, for You are the All-Hearer of prayers.”"],[3,92,"greed","peaks","You will never attain righteousness until you spend in charity from what you love. Whatever you spend, Allah is All-Knowing of it"],[3,134,"angry grudge","dew","those who spend in times of prosperity and adversity, and who restrain their anger and pardon people; for Allah loves those who do good"],[3,135,"guilty","stars","And those who, when they commit a shameful act or wrong themselves, remember Allah and seek forgiveness for their sins – who can forgive sins except Allah? – and they do not persist in what they did knowingly"],[3,139,"anxious heavy hopeful","clouds","Do not lose heart nor grieve, for you have the upper hand, if you are [truly] believers"],[3,146,"worn","path","[Imagine] how many prophets along with the devout men fought, but they did not lose heart because of what they suffered in the way of Allah, nor did they weaken nor surrender. And Allah loves those who are patient"],[3,150,"afraid","spring","But Allah is your Protector, and He is the Best of Helpers"],[3,160,"afraid anxious hopeful","hills","If Allah helps you, none can overcome you; but if He forsakes you, who is there to help you after Him? In Allah let the believers put their trust"],[3,169,"death","spring","Never think of those who are killed in Allah’s way as dead. Rather, they are alive with their Lord, receiving provision"],[3,170,"heavy peace","cave","rejoicing in what Allah has given them of His bounty, and delighted for those who have yet to join them, of those whom they left behind, that they will have no fear, nor will they grieve"],[3,173,"afraid anxious","stars","those to whom people said, “Indeed, the people have gathered against you, so fear them.” But it only increased them in faith, and they said, “Allah is Sufficient for us, and He is the best Protector.”"],[3,175,"afraid","moon","It is Satan who frightens [you] through his allies. Do not fear them, but fear Me, if you are [true] believers"],[3,185,"death","garden","Every soul will taste death, and you will be paid your reward in full on the Day of Resurrection. Whoever is spared from the Fire and admitted into Paradise has truly won, for the life of this world is nothing but an illusory pleasure"],[3,190,"doubt wonder","night","Indeed, in the creation of the heavens and earth and the alternation of the night and day are signs for people of understanding"],[3,191,"doubt wonder","dew","those who remember Allah while standing, sitting, and lying on their sides, and reflect upon the creation of the heavens and earth [saying], “Our Lord, you have not created all this in vain. Glory be to You. Protect us from the punishment of the Fire"],[3,200,"hopeful worn","path","O you who believe, be patient and endure, stand on guard and fear Allah, so that you may be successful"],[4,17,"guilty","path","Allah only accepts the repentance of those who commit evil out of ignorance, then repent soon thereafter; it is they to whom Allah will turn in forgiveness, for Allah is All-Knowing, All-Wise"],[4,27,"lust","dew","Allah wants to accept your repentance, but those who follow their lusts want you to deviate a massive deviation"],[4,32,"envy","clouds","Do not wish for what Allah has bestowed upon some of you over others. Men will have the reward of their deeds and women will have the reward of their deeds. And ask Allah for His bounty. Indeed, Allah is All-Knowing of everything"],[4,36,"parents pride","path","Worship Allah and do not associate any partners with Him. Be kind to parents, relatives, orphans, the needy, near and distant neighbors, close friends, wayfarers, and slaves whom you own. For Allah does not like those who are arrogant, boastful"],[4,40,"wronged","garden","Allah does not do injustice as much as an atom’s weight. And if it is a good deed, He will multiply it and give from Himself a great reward"],[4,78,"death","garden","Wherever you are, death will overcome you, even if you are in fortified towers.” If something good happens to them, they say, “This is from Allah,” but if something bad happens to them, they say, “This is from you.” Say, “All is from Allah.” What is wrong with these people that they hardly understand any word"],[4,103,"lazy","dew","When you have finished the prayer, remember Allah, standing, sitting, or lying down. But when you are safe again, establish regular prayer. Indeed, prayer is prescribed for the believers at specific times"],[4,110,"guilty","hills","Whoever commits evil or wrongs himself, then seeks Allah’s forgiveness will find Allah All-Forgiving, Most Merciful"],[4,114,"gossip","dunes","There is no good in much of their private talks, except for one who enjoins charity, kindness, or reconciliation between people. Anyone who does that, seeking Allah’s pleasure, We will give him a great reward"],[4,148,"wronged","bees","Allah does not like offensive words to be said in public except by one who has been wronged. Allah is All-Hearing, All-Knowing"],[4,149,"angry grudge","mountains","If you do something good openly or in secret, or pardon an offense, then Allah is indeed Ever-Pardoning, Most Capable"],[5,16,"lost","light","through which Allah guides those who seek His pleasure to the ways of peace, and brings them out of the depths of darkness to the light by His Will, and guides them to a straight path"],[5,23,"afraid","bees","Two men who feared Allah, and who had been favored by Allah said, “Enter upon them through the gate! Once you enter it, you will surely be victorious. And put your trust in Allah if you are believers.”"],[6,17,"afraid anxious","light","If Allah afflicts you with harm, there is none to remove it except Him; if He grants you good, He is Most Capable of all things"],[6,34,"heavy","river","There were messengers rejected before you, but they endured patiently their rejection and persecution until Our help came to them. None can change the words of Allah. You have already received some accounts of those messengers"],[6,59,"doubt wonder","sea","He alone has the keys of the unseen; no one knows them except Him. He knows what is in the land and sea. Not a leaf falls without His knowledge, nor a grain in the darkness of the earth, nor anything moist or dry, but is [written] in a Clear Record"],[6,82,"peace","moon","Those who believe and do not mix their faith with falsehood are the ones who will be secure, and it is they who are rightly guided"],[6,96,"wonder","moon","It is He Who cleaves the daybreak, and made the night for rest, and the sun and the moon with a precise measurement; that is the design of the All-Mighty, the All-Knowing"],[6,122,"lost","bees","Is the one who was dead and We gave him life [by faith] and gave him a light with which he walks among people like the one in darkness from which he can never escape? This is how the deeds of the disbelievers have been made appealing to them"],[6,125,"lost","mountains","Whoever Allah wills to guide, He opens his heart to Islam; and whoever He wills to lead astray, He make his heart tight and constricted, as if he were climbing up into the sky. This is how Allah punishes those who do not believe"],[6,160,"wronged","clouds","Whoever comes with a good deed will be rewarded tenfold, but whoever comes with an evil deed will only be punished with its like; and none will be wronged"],[7,10,"grateful","dew","We established you on earth and provided you with means of livelihood therein. Little do you give thanks"],[7,23,"guilty","garden","They said, “Our Lord, we have wronged ourselves; if You do not forgive us and have mercy upon us, we will surely be among the losers.”"],[7,56,"hopeful","bees","Do not spread corruption on earth after it has been set aright, but call upon Him with fear and hope. Indeed, the mercy of Allah is close to those who do good"],[7,189,"love","light","It is He Who created you from a single soul, and from it He made its spouse, so that he may find comfort in her. When he covered her, she conceived a light burden carrying it with ease. Then when she grew heavy, they called upon Allah, their Lord, “If you give us a healthy child, we will certainly be grateful.”"],[7,199,"angry grudge","birds","Be gracious, enjoin what is right and turn away from those who are ignorant"],[8,10,"anxious","river","Allah granted this only as glad tidings and to reassure your hearts, for victory only comes from Allah. Indeed, Allah is All-Mighty, All-Wise"],[8,30,"hopeful","garden","And [remember] when the disbelievers plotted against you, to take you as captive, kill you or expel you. They plan, and Allah also plans, but Allah is the Best of those who plan"],[8,46,"worn","sea","Obey Allah and His Messenger, and do not dispute with one another, or else you will lose courage and your strength will weaken. And be steadfast, for Allah is with those who are steadfast"],[8,53,"newstart","cave","This is because Allah would never change the blessings He has bestowed upon a people until they change their own attitude and conduct. Indeed, Allah is All-Hearing, All-Knowing"],[8,64,"alone","path","O Prophet, Allah is sufficient for you and for the believers who follow you"],[10,9,"lost","garden","As for those who believe and do righteous deeds, their Lord will guide them by virtue of their faith. Rivers will flow beneath them in the Gardens of Bliss"],[10,25,"peace","path","Allah invites to the Home of Peace and guides whom He wills to a straight path"],[10,57,"sick","hills","O mankind, there has come to you an exhortation from your Lord, a cure for [illness] of the hearts, a guidance and mercy for the believers"],[10,58,"grateful","mountains","Say, “By Allah’s grace and His mercy let them therefore rejoice. It is much better than what they accumulate.”"],[10,62,"afraid heavy","river","Indeed, the allies of Allah will have no fear, nor will they grieve"],[10,64,"peace","light","For them are glad tidings in the life of this world and in the Hereafter; there is no change in Allah’s words. That is the supreme triumph"],[10,107,"afraid anxious","dew","If Allah afflicts you with harm, none can remove it except Him; if He wants good for you, none can withhold His bounty. He grants it to whom He wills of His slaves, and He is the All-Forgiving, the Most Merciful.”"],[11,6,"anxious money","mist","There is no moving creature on earth but upon Allah is its provision. He knows its place of dwelling and its place of rest; everything is [written] in a clear Record"],[11,114,"lazy","night","Establish prayer at the two ends of the day and in some hours of the night. Indeed, good deeds wipe out evil deeds. This is a reminder for those who are mindful"],[12,33,"lust","hills","Joseph said, “My Lord, I would rather be in prison than that to which they are calling me. Unless you protect me from their guile, I may succumb to them and fall into ignorance.”"],[12,53,"lust","mountains","I do not absolve myself of blame. Indeed, the human soul prompts one to evil, except those to whom my Lord may show mercy. Indeed, my Lord is All-Forgiving, Most Merciful.”"],[12,64,"afraid","dew","He said, “Should I trust you with him as I trusted you earlier with his brother? But Allah is the best Protector, and He is the Most Merciful of those who show mercy.”"],[12,86,"alone heavy","moon","He said, “I only complain of my anguish and sorrow to Allah, and I know from Allah what you do not know"],[12,87,"anxious heavy hopeful","dawn","O my sons, go and find out about Joseph and his brother, and do not despair of Allah’s mercy. Indeed, no one despairs of Allah’s mercy except the disbelieving people.”"],[12,97,"guilty","light","They said, “O our father, pray to Allah to forgive us our sins; we were certainly mistaken.”"],[12,98,"guilty","peaks","He said, “I will ask my Lord to forgive you, for He is the All-Forgiving, the Most Merciful.”"],[12,110,"hopeful","mountains","Until when the messengers lost all hope and realized that they were dismissed as liars, Our help came to them, so We saved whom We willed, and Our punishment cannot be averted from the wicked people"],[13,2,"doubt wonder","moon","It is Allah Who raised the heavens without any pillars that you can see, then He rose over the Throne. He subjected the sun and the moon, each running its course for an appointed term. He governs all affairs, and explains the signs in detail, so that you may be certain of the meeting with your Lord"],[13,3,"wonder","garden","It is He Who spread out the earth and placed therein firm mountains and rivers, and created therein fruits of every kind in pairs. He causes the night to cover the day. Indeed, there are signs in this for people who reflect"],[13,28,"anxious peace","dew","those who believe and whose hearts find tranquility in the remembrance of Allah, for indeed in the remembrance of Allah do hearts find tranquility"],[14,7,"grateful hopeful","clouds","And [remember] when your Lord declared, ‘If you are grateful, I will surely give you more; but if you are ungrateful, My punishment is severe indeed.’”"],[14,12,"anxious","sea","Why should we not put our trust in Allah, and it is He Who has guided us to our ways? We will surely be patient against whatever harm you cause us. And in Allah let the faithful put their trust.”"],[14,34,"grateful","garden","And He gave you of all that you have asked for. If you try to count the blessings of Allah, you cannot count them. Indeed, mankind is truly unjust and ungrateful"],[14,41,"parents","stars","Our Lord, forgive me, my parents, and the believers on the Day when the reckoning will take place.”"],[14,42,"wronged","night","Never think that Allah is unaware of what the wrongdoers do; He only delays them for a Day when eyes will stare [in horror] –"],[15,22,"wonder","rain","And We send fertilizing winds, and send down rain from the sky for you to drink, and it is not you who could store it"],[15,49,"guilty","night","Inform My slaves that I am indeed the All-Forgiving, the Most Merciful"],[15,85,"angry","dew","We have not created the heavens and earth and all that is between them except for a true purpose. The Hour is certainly coming, so bear with them graciously"],[15,88,"envy","moon","Do not look longingly at the pleasures We have given certain classes of them, nor grieve over them, but lower your wing [in humility] to the believers"],[16,5,"wonder","cattle","And He has created the livestock for you as a source of warmth and other benefits, and from them you eat"],[16,6,"wonder","path","There is beauty for you in them when you bring them home to rest and when you take them out to graze"],[16,8,"wonder","dunes","And horses, mules and donkeys for you to ride and for adornment, and He creates other things that you do not know"],[16,9,"lost","path","It is upon Allah to show the straight path, while other ways are deviant. If He had willed, He could have guided you all"],[16,10,"wonder","rain","It is He Who sends down rain from the sky, from it you drink, and by it plants thrive on which you pasture your livestock"],[16,11,"wonder","palms","He causes to grow therewith crops, olives, palm trees, grapevines and all kinds of fruits for you. Indeed, there is a sign in this for people who reflect"],[16,13,"wonder","spring","And He has created for you various kinds of things on earth. Indeed, there are signs in this for people who take heed"],[16,14,"grateful","ship","It is He Who has subjected the sea, so that you may eat from it tender meat and extract ornaments to wear. And you see the ships cleaving their way through its waves, so that you may seek His bounty and so that you may give thanks"],[16,15,"wonder","river","And He has placed into the earth firm mountains, so it does not tremor with you, and there are rivers and pathways so that you may find your way"],[16,18,"grateful","night","If you try to count Allah’s favors, you will not be able to enumerate them. Indeed, Allah is All-Forgiving, Most Merciful"],[16,23,"pride","hills","Undoubtedly, Allah knows what they conceal and what they reveal. Indeed, He does not like those who are arrogant"],[16,41,"wronged","mist","Those who migrated for the sake of Allah after being oppressed, We will surely give them good in this world. But the reward of the Hereafter is greater, if only they knew"],[16,53,"grateful","birds","Whatever blessing you have, it is from Allah. Then when you are afflicted with hardship, to Him alone you cry out for help"],[16,65,"wonder","rain","Allah sends down rain from the sky and revive thereby the earth after its death. Indeed, there is a sign in this for people who listen"],[16,66,"wonder","cattle","And there is surely a lesson for you in livestock. We give you drink from what is in their bellies – produced between excretion and blood – pure and pleasant milk for those who drink"],[16,68,"wonder","bees","Your Lord inspired the bees, “Make homes in the mountains, the trees, and in the trellises that people put up"],[16,69,"sick wonder","garden","Then feed on every kind of fruit and follow the ways that your Lord made easy for you.” There comes out from their bellies a drink of various colors, in which there is healing for people. Indeed, there is a sign in this for people who reflect"],[16,71,"envy","cave","Allah has favored some of you over others in provision. Those who are favored will not share their provision with their slaves, so that they may become equal to them. Do they then deny the favors of Allah"],[16,78,"grateful","clouds","Allah brought you out from your mothers’ wombs not knowing anything, and He gave you hearing, sight and intellect, so that you may be grateful"],[16,79,"wonder","birds","Do they not see the birds enabled to fly in the open air? None holds them up except Allah. Indeed, there are signs in this for people who believe"],[16,80,"grateful","cattle","Allah has made your houses a place of rest for you, and He has given you tents made from the hides of livestock which you find light to handle when you travel and when you camp. And out of their wool, fur and hair [He has given you] furnishings and enjoyment for a while"],[16,97,"peace","clouds","Whoever does righteous deeds, male or female, while being a believer, We will surely grant him a good life, and We will surely reward them according to the best of their deeds"],[16,127,"heavy worn","spring","And be patient, for your patience comes only from Allah; do not grieve over them, nor be distressed by their evil plots"],[17,23,"parents peace","dew","Your Lord has ordained that you worship none but Him, and show kindness to parents. If one or both of them reach old age in your care, do not say to them a word of annoyance nor scold them, rather speak to them noble words"],[17,24,"parents","stars","and lower to them the wing of humility out of mercy, and say, “My Lord, have mercy upon them as they raised me when I was small.”"],[17,30,"money","hills","Your Lord extends provision to whom He wills or restricts it. He is All-Aware and All-Seeing of His slaves"],[17,32,"lust","path","Do not go near adultery, for it is indeed a shameful act and an evil way"],[17,36,"gossip","garden","Do not follow that of which you have no knowledge. Indeed, the hearing, the sight, and the heart, all of them will be called to account"],[17,37,"pride","mountains","Do not walk on the earth arrogantly; you cannot cleave the earth, nor can you reach the mountains in height"],[17,44,"wonder","night","The seven heavens and the earth, and all those in them glorify Him. There is not a single thing that does not glorify Him with His praise, but you do not understand their glorification. Indeed, He is Most Forbearing, All-Forgiving"],[17,70,"grateful","sea","We have honored the children of Adam, carried them on land and sea, provided for them good things and favored them above many of those whom We have created"],[17,78,"lazy","sun","Establish prayer at the decline of the sun until the darkness of the night, and the recitation of dawn [prayer], for the recitation of dawn is ever witnessed [by the angles]"],[17,80,"lost newstart","dew","And say, “My Lord, make me enter an honorable entrance and make me exit an honorable exit, and grant me from Yourself a supporting authority.”"],[17,82,"sick","night","We send down the Qur’an as a healing and mercy for the believers, but it does not increase the wrongdoers except in loss"],[18,10,"lost","cave","When the youths took refuge in the Cave, and said, “Our Lord, grant us mercy from Yourself, and show us the right way in our ordeal.”"],[19,4,"alone","bees","He said, “My Lord, my bones have grown feeble, and gray hair has spread across my head, yet never have I been disappointed in my prayer to You, my Lord"],[19,14,"parents","peaks","and dutiful to his parents, and he was not an oppressor or disobedient"],[19,32,"parents","light","and has made me dutiful to my mother, and has not made me an oppressor or disobedient"],[19,96,"love","night","Those who believe and do righteous deeds, the Most Compassionate will endear them [to His creation]"],[20,2,"worn","peaks","We have not sent down the Qur’an to you [O Prophet] to cause you distress"],[20,14,"lazy","mountains","‘Indeed, I am Allah; none has the right to be worshiped except Me, so worship Me and establish prayer to remember me"],[20,46,"afraid alone anxious","night","He said, “Do not be afraid; I am with you both, hearing and seeing"],[20,68,"afraid","clouds","We said, “Do not be afraid; it is you who will prevail"],[20,82,"guilty","dew","I am indeed Most Forgiving to those who repent and believe, and do righteous deeds, then stay on the right path.”"],[20,131,"envy","dunes","Do not turn your eyes covetously towards the various forms of splendor of this life that We have given some of the [disbelievers] to enjoy, as a trial for them. But the provision of your Lord is far better and more lasting"],[20,132,"lazy worn","river","Enjoin your household to perform prayer and adhere to it firmly. We ask no provision from you; rather, it is We Who give you provision. And the best outcome is for those who fear Allah"],[21,33,"wonder","moon","It is He Who created the night and the day, the sun and the moon – each floating in its orbit"],[21,35,"death","moon","Every soul will taste death; We test you with bad and good as a trial, then to Us you will all be returned"],[21,47,"wronged","wheat","We will place the scales of justice on the Day of Resurrection, and no soul will be wronged in the least. Even if a deed is the weight of a mustard seed, We will bring it forth. Sufficient are We as Reckoners"],[21,83,"heavy sick","bees","And [remember] Job, when he cried out to his Lord, “I have been struck by adversity, and You are the Most Merciful of those who show mercy.”"],[21,84,"sick","light","So We responded to him and relieved his adversity, and We restored to him his family, twice as many, as a mercy from Us and as a reminder for Our worshipers"],[21,87,"guilty","light","And [remember] the Man of the Whale [Jonah] when he departed in anger, thinking that We would not take him to task. Then he cried out in the depths of darkness, “None has the right to be worshiped except You. Glory be to You! I have certainly done wrong”"],[21,88,"heavy hopeful","birds","So We answered his prayer and rescued him from distress. This is how We rescue the believers"],[21,89,"alone","dew","And [remember] Zachariah, when he cried out to his Lord, “My Lord, do not leave me childless, for You are the Best of Inheritors.”"],[23,1,"lazy","river","The believers have attained true success"],[23,2,"lazy","garden","those who humble themselves in their prayers"],[23,3,"gossip","light","and those who turn away from all that is vain"],[23,5,"lust","spring","and those who guard their sexual desires"],[23,18,"wonder","rain","We send down water from the sky in due measure and cause it to stay in the earth, and We are surely able to take it away"],[23,19,"wonder","palms","With this [water] We produce for you gardens of palm trees and grapevines, in which there are many fruits from which you eat"],[23,96,"angry","spring","Repel evil with what is best; We know well what they claim"],[23,118,"guilty","peaks","Say, “My Lord, forgive and have mercy, and you are the Best of those who show mercy.”"],[24,15,"gossip","dew","when you were passing it from one tongue to the other, and saying with your mouths what you had no knowledge of, and were taking it lightly, whereas with Allah it was a grave offense"],[24,21,"lust","bees","O you who believe, do not follow the footsteps of Satan; whoever follows the footsteps of Satan, he only enjoins indecency and evil acts. Were it not for Allah’s grace and mercy upon you, none of you would have ever been purified. But Allah purifies whom He wills, and Allah is All-Hearing, All-Knowing"],[24,22,"angry grudge guilty","hills","The people of virtue and affluence among you should not swear to withhold their aid from their relatives, the needy and the emigrants in the cause of Allah. Let them pardon and overlook. Do you not like to be forgiven by Allah? For Allah is All-Forgiving, Most Merciful"],[24,30,"lust","peaks","Tell the believing men to lower their gazes and guard their private parts; that is purer for them. Indeed, Allah is All-Aware of what they do"],[24,32,"love","cave","Arrange marriages for those of you who are unmarried, and for the righteous of your bondmen and bondwomen. If they are poor, Allah will suffice them from His bounty, for Allah is All-Bountiful, All-Knowing"],[25,20,"worn","cave","We did not send any messengers before you [O Prophet] except that they ate food and walked in the markets. We have made some of you as a trial for others. Will you have patience? For your Lord is All-Seeing"],[25,45,"wonder","sun","Do you not see how your Lord extends the shade? If He had willed, He could have made it still. Then We made the sun an indication for it"],[25,47,"wonder","night","It is He Who has made the night as a garment for you, and made sleep for rest; and has made daytime for returning to life"],[25,48,"wonder","sandwind","It is He Who sends the winds as harbingers before His mercy, and We send down from the sky pure water"],[25,53,"wonder","river","It is He Who merges the two bodies of water: one fresh and palatable and the other salty and bitter, and He has made between them a barrier and an insurmountable partition"],[25,54,"wonder","garden","It is He Who created human beings from water, then made between them bonds of kinship and marriage, for your Lord is Most Capable"],[25,58,"afraid anxious","cave","Put your trust in the Ever-Living Who never dies, and glorify Him with praise. He is Sufficient as All-Aware of the sins of His slaves –"],[25,61,"wonder","stars","Blessed is He Who placed in the sky constellations, and placed therein a radiant lamp and a luminous moon"],[25,63,"angry peace pride","moon","The slaves of the Most Compassionate are those who walk on earth humbly, and when the ignorant address them, they only say words of peace"],[25,70,"guilty newstart","sea","except those who repent and believe, and do righteous deeds; for them Allah will change their evil deeds into good deeds, for Allah is All-Forgiving, Most Merciful"],[25,72,"angry gossip","river","And those who do not witness falsehood, and when they pass by futility, they pass by with dignity"],[25,74,"love peace","light","and those who say, “Our Lord, let our spouses and children be a source of joy for us, and make us good examples for the righteous.”"],[26,62,"afraid alone","light","Moses said, “Certainly not! My Lord is with me; He will guide me.”"],[26,80,"sick","garden","and when I am ill He heals me"],[27,19,"grateful","night","So he smiled in amusement at her words and said, “My Lord, inspire me to be grateful for Your favor which You have bestowed upon me and my parents, and to do righteous deeds that please you. And admit me, by Your mercy, among Your righteous slaves.”"],[27,60,"wonder","rain","Is He [not better] Who created the heavens and earth, and sent down for you rain from the sky, by which We caused to grow gardens of cheerful beauty? You could never cause their trees to grow. Is there any god besides Allah? No, but they are people who ascribe equals [to Allah]"],[27,61,"wonder","twoseas","Is He [not better] Who made the earth a stable place to live, and caused rivers to flow through it, and placed therein firm mountains, and made a barrier between two flowing bodies of water? Is there any god besides Allah? No, but most of them do not know"],[27,79,"afraid","clouds","So put your trust in Allah, for you are upon the clear truth"],[28,7,"heavy","night","We inspired the mother of Moses, “Suckle him; but when you fear for him, cast him into the river, and do not fear or grieve. We will surely return him to you, and will make him one of the messengers.”"],[28,54,"angry","dunes","They will be given their reward twice for their patience, repelling evil with good, and for spending out of what We have provided for them"],[28,80,"envy","birds","But those who were given knowledge said, “Woe to you! Allah’s reward is better for those who believe and do righteous deeds. But none will attain this except those who are steadfast.”"],[28,83,"pride","night","That is the abode of the Hereafter We will assign to those who neither seek superiority nor corruption on earth. The best outcome is for those who fear Allah"],[29,8,"parents","peaks","We have enjoined upon man kindness to his parents. But if they strive to make you associate with Me what you have no knowledge of, then do not obey them. To Me is your return; then I will inform you of what you used to do"],[29,20,"doubt wonder","path","Say, “Travel through the land and see how He originated the creation, then Allah will repeat it a second time. Indeed, Allah is Most Capable of all things.”"],[29,45,"lazy","light","Recite [O Prophet] what is revealed to you of the Book, and establish prayer, for indeed prayer restrains one from immoral acts and wickedness. Indeed, the remembrance of Allah is of greater merit. And Allah knows all what you do"],[29,57,"death","hills","Every soul will taste death, then to Us you will all be returned"],[29,60,"anxious money","sea","How many creatures there are that cannot carry their provisions! It is Allah Who provides for them and for you, and He is the All-Hearing, the All-Knowing"],[29,69,"alone hopeful lost","dew","As for those who strive in Our cause, We will surely guide them to Our ways, for Allah is certainly with those who do good"],[30,8,"doubt","mountains","Do they not reflect on themselves? Allah did not create the heavens and earth and all that is between them except for a true purpose and for an appointed term, but most people deny the meeting with their Lord"],[30,21,"love peace","night","And among His signs is that He created for you spouses from among yourselves that you may find comfort in them, and He placed between you love and mercy. Indeed, there are signs in this for people who reflect"],[30,22,"wonder","moon","And among His signs is the creation of the heavens and earth, and the diversity of your tongues and colors. Indeed, there are signs in this for those who have knowledge"],[30,23,"wonder","night","And among His signs is your sleep by night and day, and your seeking of His bounty [by day]. Indeed, there are signs in this for people who listen"],[30,24,"wonder","lightning","And among His signs is that He shows you lightning, causing fear and hope, and He sends down water from the sky, reviving therewith the earth after its death. Indeed, there are signs in this for people who understand"],[30,37,"money","birds","Do they not see that Allah extends provision to whom He wills or restricts it? Indeed, there are signs in this for people who believe"],[30,46,"grateful","ship","Among His signs is that He sends the winds as harbingers [of rain], so that He may give you a taste of His mercy, and that the ships may sail by His command, and that you may seek His bounty, and so that you may be grateful"],[30,48,"wonder","rain","It is Allah Who sends the winds that stir up clouds, then He spreads them in the sky as He wills, and He splits them into different fragments, then you see the rain pouring down from their midst. Then as soon as He makes it fall upon whoever He wills of His slaves, they rejoice"],[31,10,"wonder","rain","He created the heavens without pillars that you can see; and He placed firm mountains on the earth so it does not shake with you; and He spread therein all kinds of creatures. We sent down rain from the sky and caused to grow therein all kinds of fine plants"],[31,14,"parents","hills","We have enjoined upon man kindness to his parents. His mother bore him in weakness upon weakness, and his weaning took place within two years. Be grateful to Me and to your parents. To Me is the final return"],[31,17,"worn","sea","“O my dear son, establish prayer, enjoin what is right and forbid what is wrong, and be patient with whatever befalls you. This is a matter of firm resolve"],[31,18,"peace pride","dunes","Do not turn your face away from people [in contempt], and do not walk on earth in arrogance. Indeed, Allah does not like anyone who is arrogant and boastful"],[31,19,"angry gossip","river","Be moderate in your gait and lower your voice. Indeed, the most repugnant of voices is the voice of donkeys.”"],[31,20,"grateful","garden","Do you not see that Allah has made subservient to you all that is in the heavens and on earth, and has abundantly bestowed upon you His favors, both apparent and hidden? Yet there are some people who dispute concerning Allah without knowledge, or guidance, or an enlightening scripture"],[31,27,"wonder","sea","If all the trees on earth were pens and the ocean [were ink], replenished by seven more oceans, the Words of Allah would not be exhausted. Indeed, Allah is All-Mighty, All-Wise"],[31,29,"wonder","moon","Do you not see that Allah causes the night to merge into day and the day into the night, and has subjected the sun and the moon, each running its course for an appointed term, and that Allah is All-Aware of what you do"],[31,34,"death","rain","Indeed, Allah has the knowledge of the Hour. He sends down the rain and knows what is in the wombs. No soul knows what it will do tomorrow, nor does any soul know in which land it will die. Indeed, Allah is All-Knowing, All-Aware"],[32,27,"wonder","cattle","Do they not see that We drive water to parched land, producing thereby crops of which their cattle and they themselves eat? Do they not then see"],[33,3,"anxious","stars","Put your trust in Allah; sufficient is Allah as a Disposer of Affairs"],[33,39,"afraid","birds","those who convey the messages of Allah and fear Him, and they do not fear anyone except Allah. And sufficient is Allah as a Reckoner"],[33,44,"peace","dawn","Their greeting on the Day they meet Him will be, “Peace,” and He has prepared for them a generous reward"],[33,47,"hopeful","hills","And give glad tidings to the believers that they will have a great bounty from Allah"],[33,70,"gossip","dunes","O you who believe, fear Allah and say what is right"],[34,39,"greed money","dunes","Say, “My Lord extends provision to whom He wills of His slaves or restricts it. Whatever you spend in charity, He will compensate for it, for He is the Best of Providers.”"],[35,2,"anxious","clouds","Whatever mercy Allah opens up for people, none can withhold it; and whatever He withholds, none can release it thereafter, for He is the All-Mighty, All-Wise"],[35,9,"wonder","clouds","It is Allah Who sends the winds which stir up clouds, then We drive them to a dead land, and revive therewith the earth after its death. Such will be the Resurrection"],[35,12,"wonder","ship","The two bodies of water are not alike: one is fresh and palatable, pleasant to drink, and the other is salty and bitter. Yet from each you eat fresh meat and extract ornaments to wear. And you see the ships traverse their way through both, so that you may seek His bounty and so that you may give thanks"],[35,27,"wonder","rain","Do you not see that Allah sends down rain from the sky, then We bring forth thereby fruits of various colors? And in the mountains there are various tracts of white and red, of various colors, and raven black"],[35,34,"heavy","birds","And they will say, “All praise be to Allah Who has taken away from us all sorrow. Indeed, our Lord is All-Forgiving, Most Appreciative"],[36,33,"wonder","wheat","There is a sign for them in the dead land: We give it life and produce from it grain for them to eat"],[36,35,"grateful","garden","so that they may eat of its fruit that was not made by their hands. Will they not then give thanks"],[36,36,"wonder","garden","Glory be to the One Who created all types of things that the earth produces, and of themselves, and of things that they have no knowledge about"],[36,37,"wonder","night","There is another sign for them in the night: We strip from it the daylight, and they are left in darkness"],[36,38,"wonder","sun","The sun is running to its determined course. That is the design of the All-Mighty, All-Knowing"],[36,39,"wonder","palms","As for the moon, We have determined phases for it, until it becomes like an old palm stalk"],[36,40,"wonder","moon","It is not for the sun to catch up with the moon, nor for the night to outstrip the day. Each is floating in its own orbit"],[36,58,"peace","spring","“Peace”: a word from a Most Merciful Lord"],[38,35,"guilty","cave","He said, “My Lord, forgive me and grant me a kingdom, the like of which will never be granted to anyone after me. You are indeed the Bestower.”"],[39,5,"wonder","moon","He created the heavens and earth for a true purpose. He wraps the night over the day and wraps the day over the night. He has subjected the sun and the moon, each running its course for an appointed term. Indeed, He is the All-Mighty, Most Forgiving"],[39,10,"hopeful worn","dawn","Say, “O My slaves who believe, fear your Lord. Those who do good in this world will have a good return, and Allah’s earth is spacious. Those who observe patience will be given their reward without measure.”"],[39,18,"lost","river","those who listen to what is said and follow the best of it. They are the ones whom Allah has guided, and they are the people of understanding"],[39,21,"wonder","rain","Do you not see that Allah sends down rain from the sky and makes it flow as springs in the earth, then He brings forth thereby crops of various colors; then they whither and you see them turn yellow; then He causes them to crumble? Indeed, there is a reminder in this for people of understanding"],[39,22,"peace","spring","Is one whose heart Allah has opened to Islam, so he is enlightened by his Lord [like a disbeliever]? Woe to those whose hearts are hardened upon hearing the reminder of Allah; it is they who are clearly misguided"],[39,36,"afraid anxious","dunes","Is Allah not sufficient for His slave? Yet they frighten you with those [whom they worship] besides Him. Whoever Allah causes to stray, there is none to guide him"],[39,42,"death","cave","Allah takes away the souls at the time of their death and of those who do not die during their sleep. He withholds the souls of those on whom He has decreed death, and releases others until an appointed term. Indeed, there are signs in this for people who reflect"],[39,53,"guilty heavy hopeful newstart","path","Say [Allah says], “O My slaves who have transgressed against themselves, do not despair of Allah’s mercy, for indeed Allah forgives all sins. He is indeed the All-Forgiving, the Most Merciful"],[39,54,"guilty","sea","Turn to your Lord [in repentance] and submit to Him before the punishment comes upon you, for then you will not be helped"],[39,66,"grateful","moon","Rather, worship Allah alone and be among those who are grateful"],[39,73,"peace","spring","But those who feared their Lord will be led to Paradise in groups, until when they reach it, its gates will be wide open, and its keepers will say to them, “Peace be upon you. You have done well, so enter it, abiding forever.”"],[40,19,"lust","mist","He knows the sneaky glances of the eyes and what the hearts conceal"],[40,51,"wronged","dew","We will surely help Our messengers and those who believe in the life of this world and on the Day when the witnesses will come forward"],[40,60,"alone hopeful","path","Your Lord says, “Call upon Me; I will respond to you. Those who are too proud to worship Me will enter Hell, utterly debased.”"],[40,61,"grateful","night","It is Allah Who has made the night for you to rest therein and the day bright. Indeed, Allah is Most Bountiful to people, but most people are ungrateful"],[41,30,"afraid anxious","sea","Those who say, “Our Lord is Allah,” then remain steadfast, the angels will descend upon them [at the time of death, saying], “Do not fear, nor grieve, but receive glad tidings of Paradise which you were promised"],[41,31,"peace","dunes","We are your allies in the life of this world and in the Hereafter. You will have therein whatever your souls desire, and you will have therein whatever you ask for"],[41,34,"angry grudge","light","Good and evil are not equal. Repel evil with what is good; the one whom you have enmity with will become as if he was a close friend"],[41,35,"angry worn","peaks","But none can attain this except those who are patient, and none can attain this except those who are greatly fortunate"],[41,37,"wonder","moon","Among His signs are the night and the day, the sun and the moon. Do not prostrate to the sun or to the moon, but prostrate to Allah Who created them, if you truly worship Him"],[41,39,"wonder","rain","And among His signs is that you see the land withered, but when We send down rain upon it, it stirs and swells. He Who gives it life will surely give life to the dead, for He is Most Capable of all things"],[41,53,"doubt wonder","light","We will show them Our signs in the universe and in their own selves, until it becomes clear to them that this [Qur’an] is the truth. Is it not enough that your Lord is a Witness over all things"],[42,19,"anxious money","dunes","Allah is Kind to His slaves; He gives provision to whom He wills, and He is the All-Powerful, the All-Mighty"],[42,25,"guilty","cave","It is He Who accepts repentance from His slaves and pardons sins, and He knows all what you do"],[42,29,"wonder","night","Among His signs is the creation of the heavens and earth, and what He spread between them of all living creatures. And He is Most Capable of bringing them together whenever He wills"],[42,30,"guilty","moon","Whatever calamity befalls you is because of what your own hands have earned, and He overlooks much"],[42,37,"angry","sea","and those who avoid major sins and shameful deeds, and when they are angered, they forgive"],[42,39,"wronged","river","and those who retaliate fairly when oppressed"],[42,40,"grudge","garden","The retribution of harm is its equivalent harm, but whoever pardons and seeks reconciliation, his reward is with Allah. Indeed, He does not like the wrongdoers"],[42,41,"wronged","light","But whoever retaliates after being wronged, there is no blame on them"],[42,43,"angry grudge worn","spring","But whoever observes patience and forgives, it is indeed a matter of great resolve"],[42,52,"lost","light","Likewise We have revealed to you a revelation by Our command. You knew nothing of the Scripture or matters of faith, but We have made it [the Qur’an] a light by which We guide whom We will of Our slaves. And you are truly leading people to a straight path"],[43,11,"wonder","rain","And it is He Who sends down rain from the sky in due measure, by which We revive dead land. This is how you will be brought forth [from the grave]"],[43,32,"envy","cave","Is it they who distribute the mercy of your Lord? It is We Who have distributed their livelihood among them in the life of this world, and have raised some of them above others in ranks, so that they may serve one another. But the mercy of your Lord is better than what they accumulate"],[45,5,"wonder","sandwind","And in the alternation of the night and day, the provision that Allah sends down from the sky, reviving thereby the earth after its death, and directing of the winds, there are signs for people of understanding"],[45,12,"grateful","ship","It is Allah Who has subjected for you the sea, so that the ships may sail on it by His command, and so that you may seek His bounty, and so that you may be grateful"],[45,14,"grudge","dawn","Tell those who believe to forgive those who do not fear the days of Allah, so that He may recompense each people for what they used to do"],[46,13,"peace","peaks","Indeed, those who say, “Our Lord is Allah”, then remain steadfast, they will have no fear, nor will they grieve"],[46,31,"guilty","light","O our people, respond to the one who is calling to Allah, and believe in him; He will forgive some of your sins and protect you from a painful punishment"],[46,35,"worn","birds","So be patient, as the Messengers of Firm Resolve were patient, and do not seek to hasten [punishment] for them. On the Day when they see what they were warned of, it will be as if they had only stayed [in this world] for an hour of a day. This is a warning. Will anyone be destroyed except the rebellious people"],[47,7,"anxious hopeful","night","O you who believe, if you stand up for Allah, He will help you and make your steps firm"],[47,17,"lost","river","As for those follow guidance, He increases them in guidance and blesses them with righteousness"],[47,24,"doubt","dew","Do they not reflect upon the Qur’an, or are there locks upon their hearts"],[48,4,"peace","dew","It is He Who sent down tranquility into the hearts of the believers so that they may increase in faith along with their faith. To Allah belong the soldiers of the heavens and earth. And Allah is All-Knowing, All-Wise"],[49,10,"love","sea","The believers are but brothers, so make peace between your brothers. And fear Allah, so that you may be shown mercy"],[49,12,"gossip","river","O you who believe, avoid much of the suspicion, for some suspicions are sin. Do not spy on one another, nor backbite one another. Would any of you like to eat the flesh of his dead brother? You would surely abhor it. So fear Allah. Indeed, Allah is Accepting of Repentance, Most Merciful"],[49,13,"peace","garden","O mankind, We have created you from a male and a female, and made you into nations and tribes so that you may recognize one another. Indeed, the most noble of you before Allah is the most righteous among you. Indeed, Allah is All-Knowing, All-Aware"],[50,6,"wonder","stars","Have they not then looked at the sky above them – how We built it and adorned it [with stars], and it has no rifts"],[50,7,"wonder","mountains","And We have spread out the earth and set therein firm mountains, and caused to grow therein plants of every pleasant kind"],[50,9,"wonder","rain","And We send down from the sky blessed rain, with which We cause to grow gardens and grain for harvest"],[50,10,"wonder","palms","and towering palm trees having clustered fruit"],[50,16,"alone","path","We have created man and know what his soul whispers within him, for We are closer to him than his jugular vein"],[50,18,"gossip","dunes","Not a single word he utters but there is with him a vigilant watcher, ready [to record it]"],[50,34,"peace","mountains","Enter it in peace. This is the Day of eternity.”"],[51,20,"doubt wonder","mist","On earth there are signs for those who are certain in faith"],[51,21,"doubt wonder","hills","and also in your own selves. Do you not see"],[51,22,"anxious money","mountains","And in the heaven is your provision and all that you are promised"],[51,47,"wonder","light","We built the heaven with might, and We are indeed expanding it"],[51,48,"wonder","spring","And We spread out the earth. How well did We smooth it out"],[51,49,"wonder","spring","And We have created everything in pairs, so that you may take heed"],[51,56,"lazy","dawn","I have not created the jinn and mankind except to worship Me"],[53,49,"wonder","stars","and that He is the Lord of Sirius [a star worshiped before Islam]"],[54,49,"wonder","light","Indeed, We have created everything according to a determined measure"],[55,13,"grateful","path","Then which of the favors of your Lord will you [men and jinn] deny"],[55,19,"wonder","twoseas","He merges the two seas [of fresh and salty water] meeting together"],[55,20,"wonder","spring","yet between them is a barrier so that they do not cross"],[56,26,"peace","peaks","except the words of peace, peace"],[56,63,"wonder","light","Have you thought about what you sow"],[56,68,"wonder","dew","Have you thought about the water that you drink"],[56,71,"wonder","moon","Have you thought about the fire that you kindle"],[57,4,"alone","clouds","It is He Who created the heavens and earth in six days, and then rose over the Throne. He knows all that goes into the earth and all that comes out of it, and all that descends from the heaven and all that ascends to it. He is with you wherever you are, and Allah is All-Seeing of what you do"],[57,6,"wonder","night","He causes the night to merge into the day and the day to merge into the night, and He is All-Knowing of what is in the hearts"],[57,7,"greed","mountains","Believe in Allah and His Messenger, and spend [in Allah’s cause] out of what He has entrusted you with. For those among you who believe and spend, there will be a great reward"],[57,23,"envy heavy pride","clouds","so that you may not grieve over what you have missed, nor exult over what He has given you, for Allah does not love anyone who is conceited and boastful –"],[59,10,"grudge","spring","And those who came after them say, “Our Lord, forgive us and our brethren who preceded us in faith, and do not let there be any ill feelings in our hearts towards those who believe. Our Lord, indeed, You are All-Gracious, Most Merciful.”"],[59,23,"peace","sea","He is Allah; none has the right to be worshiped except Him, the Sovereign, the Most Holy, the Most Perfect, the Granter of Security, the Watcher over all, the All-Mighty, the Compeller, the Supreme. Glory be to Allah far above what they associate with Him"],[60,7,"love","mist","It may be that Allah will bring about friendship between you and those of them whom you hold as enemies. Allah is Most Capable, and Allah is All-Forgiving, Most Merciful"],[62,8,"death","river","Say, “The death from which you run away will surely overcome you, then you will be brought back to the Knower of the unseen and the seen, and He will inform you of what you used to do.”"],[62,9,"lazy","garden","O you who believe, when the call for prayer is made on Friday, then hasten to the remembrance of Allah and leave off trading. That is better for you, if only you knew"],[62,10,"money","light","When the prayer is over, disperse in the land and seek from the bounty of Allah, and remember Allah much so that you may be successful"],[63,9,"greed","mist","O you who believe, do not let your wealth and your children distract you from Allah’s remembrance. For whoever does that, it is they who are the losers"],[64,11,"lost","stars","No calamity befalls except with Allah’s permission. Whoever believes in Allah, He will guide his heart. And Allah is All-Knowing of everything"],[64,16,"greed","mist","So fear Allah as much as you can, listen and obey, and spend in charity; that is better for your souls. Whoever is protected from the stinginess of his soul, it is they who are successful"],[65,3,"afraid anxious hopeful money","clouds","and He will provide for him from where he does not expect. Whoever puts his trust in Allah, He is sufficient for him. Indeed, Allah will surely accomplish His purpose, for Allah has set a destiny for everything"],[67,3,"wonder","sea","Who created seven heavens one above another; you will not see any imperfection in the creation of the Most Compassionate. Look again; can you see any flaw"],[67,15,"anxious money","path","It is He Who made the earth smooth for you, so travel through its regions and eat from His provisions. And to Him is the resurrection"],[67,19,"doubt wonder","birds","Do they not see the birds above them, spreading out and folding in their wings? None holds them up except the Most Compassionate. He is indeed All-Seeing of everything"],[67,23,"grateful","dunes","Say, “It is He Who brought you into being and gave you hearing, sight, and hearts; little do you give thanks.”"],[70,29,"lust","peaks","and those who guard their private parts"],[71,10,"guilty","mountains","I said, ‘Seek forgiveness from your Lord. Indeed, He is Most Forgiving"],[71,15,"wonder","garden","Do you not see how Allah has created seven heavens, one above another"],[71,16,"wonder","moon","and has placed the moon therein as a light and the sun as a burning lamp"],[71,28,"parents","hills","My Lord, forgive me and my parents, and whoever enters my house as a believer, and all the believing men and women, and do not increase the wrongdoers except in ruin.”"],[76,3,"grateful lost","path","Indeed, We showed him the way, whether he is grateful or ungrateful"],[76,9,"peace","sea","[saying to themselves] “We feed you only for the sake of Allah; we seek from you neither reward nor gratitude"],[76,24,"worn","mist","So be patient with your Lord’s decree, and do not obey any sinner or disbeliever from among them"],[78,6,"wonder","river","Have We not made the earth a resting place"],[78,7,"wonder","mountains","And the mountains as stakes"],[78,9,"wonder","peaks","and made your sleep for rest"],[78,10,"wonder","night","and made the night a covering"],[78,11,"wonder","cave","and made the day for seeking livelihood"],[78,12,"wonder","birds","and built above you seven mighty heavens"],[78,13,"wonder","lamp","and made therein a blazing lamp"],[78,14,"wonder","rain","and sent down from the rainclouds abundant water"],[79,40,"lust","stars","But those who feared standing before their Lord and restrained themselves from evil desires"],[87,14,"lazy","light","Indeed, he who purifies himself will attain success"],[87,15,"lazy","peaks","and remembers his Lord’s Name and prays"],[88,17,"doubt wonder","cattle","Do they not reflect on the camel, how it is created"],[88,18,"wonder","dunes","and the sky, how it is raised high"],[88,19,"wonder","mountains","and the mountains, how they are firmly set up"],[88,20,"wonder","garden","and the earth, how it is spread out"],[89,27,"death peace","dew","[It will be said to the believer,] “O the tranquil soul"],[89,28,"death peace","spring","Return to your Lord, well pleased and pleasing [to Him]"],[89,29,"peace","peaks","Join My [righteous] slaves"],[89,30,"peace","spring","and enter My Paradise.”"],[90,10,"lost","mountains","and shown him the two ways [of right and wrong]"],[90,17,"worn","peaks","then [most importantly] to be one of those who believe and exhort one another to patience and exhort one another to compassion"],[91,1,"wonder","sun","By the sun and its brightness"],[91,2,"wonder","moon","and by the moon as it follows it"],[91,3,"wonder","garden","and by the day as it displays it"],[91,4,"wonder","night","and by the night as it covers it"],[92,7,"hopeful newstart worn","path","We will make easy for him the way of salvation"],[92,18,"greed","night","who spends his wealth to purify himself"],[92,21,"peace","spring","He will surely be well pleased"],[93,3,"alone heavy","birds","your Lord has not forsaken you [O Prophet], nor does He hate you"],[93,4,"hopeful","dew","the Hereafter is better for you than the present life"],[93,5,"heavy hopeful","spring","and your Lord will certainly give you so much that you will be well pleased"],[93,6,"heavy","night","Did He not find you an orphan then take good care of you"],[93,7,"heavy lost","moon","Did He not find you unguided then guide you"],[93,8,"heavy","dawn","Did He not find you in need then enrich you"],[93,11,"grateful","hills","and proclaim the blessings of your Lord"],[94,5,"anxious heavy hopeful","garden","For indeed, with hardship comes ease"],[94,6,"anxious hopeful","light","indeed, with hardship comes ease"],[94,7,"newstart worn","peaks","So whenever you are free, strive in worship"],[94,8,"worn","spring","and turn to your Lord in devotion"],[99,7,"wronged","birds","So whoever does an atom’s weight of good will see it"],[99,8,"wronged","dew","and whoever does an atom’s weight of evil will see it"],[102,1,"greed","sea","Competition for worldly gains distracts you [from Allah]"],[103,3,"worn","clouds","except those who believe and do righteous deeds, and exhort one another to the truth and exhort one another to patience"],[106,4,"grateful money","dawn","Who fed them against hunger and made them secure against fear"],[108,2,"grateful","hills","so pray and sacrifice to your Lord alone"],[110,3,"guilty","garden","then glorify the praise of your Lord, and ask His forgiveness. Indeed, He is ever Accepting of Repentance"],[113,1,"afraid","dawn","Say, “I seek refuge with the Lord of the daybreak"],[113,5,"envy","garden","and from the harm of the envier when he envies"],[114,1,"afraid","night","Say, “I seek refuge with the Lord of mankind"]];const STORIES=[
+{t:"Yusuf and his brothers",r:"Surah Yusuf · 12",s:"garden",
+b:"A boy tells his father a dream of eleven stars bowing to him. His brothers, jealous of how their father loves him, throw him into the bottom of a well and tell their father a wolf took him. He is sold, imprisoned for a crime he did not commit, and forgotten there for years — then read as a reader of dreams by a king, and raised over the storehouses of Egypt. When famine drives his brothers to him for grain, he knows them, and they do not know him. He gives them their measure, and asks after their father. In the end he says only: no blame on you today.",
+h:"Everything that was done to him was the road to where he was needed."},
+
+{t:"Musa at the sea",r:"Surah Ash-Shu'ara · 26",s:"sea",
+b:"Pharaoh's army is behind them and open water is in front. His people say: we are caught. Musa answers that they are not — his Lord is with him, and will guide him. He is told to strike the sea with his staff, and it parts, each side standing like a great mountain. They cross on dry ground. The army follows into the same path and the water returns over them.",
+h:"He was told there was a way through before he could see one."},
+
+{t:"Nuh and the ship",r:"Surah Hud · 11 · Surah Nuh · 71",s:"rain",
+b:"For most of a thousand years he calls his people, in the open and in private, at night and in daylight. They put their fingers in their ears and pull their coats over their heads. He is given no crowd, only a few. So he builds a ship on dry land while they pass by laughing at him. Then the sky opens and the ground itself springs water, and the ship carries the few who believed.",
+h:"He was not asked to be believed. He was asked to keep calling."},
+
+{t:"Ibrahim in the fire",r:"Surah Al-Anbiya · 21",s:"light",
+b:"He walks into the house of idols his people worship and breaks them, leaving the largest standing with the axe in its hand. Ask them, he says, when they demand to know who did it. They know the statues cannot answer, and knowing it is the whole argument. So they build a fire and throw him into it. The command given to the fire is: be coolness and peace.",
+h:"He was not taken out of the fire. He was kept safe inside it."},
+
+{t:"Ibrahim looking for his Lord",r:"Surah Al-An'am · 6",s:"stars",
+b:"Night covers him and he sees a star and says: this is my Lord. It sets, and he says he does not love the things that set. Then the moon rises, and he says the same, and it sets too. Then the sun, the brightest of them, and it goes down like the rest. So he turns his face to the One who made the heavens and the earth.",
+h:"He found it by refusing to settle for anything that fades."},
+
+{t:"Maryam and the palm tree",r:"Surah Maryam · 19",s:"palms",
+b:"Alone and carrying a child no one will believe in, the pains of birth drive her to the trunk of a palm tree. She says she wishes she had died before this and been something forgotten. A voice from below her tells her not to grieve — that her Lord has put a stream beneath her, and that if she shakes the trunk of the palm toward herself, ripe dates will fall. So she is told: eat, drink, and be comforted.",
+h:"She had to shake the tree herself, but the dates were already ripe."},
+
+{t:"The companions of the cave",r:"Surah Al-Kahf · 18",s:"cave",
+b:"A handful of young people refuse the belief of an entire city and are left with nowhere to stand. They take shelter in a cave and ask their Lord for mercy and for their affair to be set right. They are put to sleep there for three hundred years and more. When they wake they think it has been a day, or part of a day, and send one of them into the city with an old coin to buy food — and the whole city learns what became of them.",
+h:"They ran with nothing but the asking, and the asking was enough."},
+
+{t:"Yunus in the darkness",r:"Surah Al-Anbiya · 21",s:"sea",
+b:"He leaves his people in anger, certain that nothing more can be done, and boards a ship. The sea takes him and a great fish swallows him. In the dark, inside the dark, inside the dark, he calls out that there is no god but Him, that He is far above all fault, and that he himself has been among the wrongdoers. He is answered, and delivered — and his people, all of them, believe.",
+h:"Admitting he was wrong was the door out."},
+
+{t:"Musa and al-Khidr",r:"Surah Al-Kahf · 18",s:"river",
+b:"Musa travels to meet a servant of God who has been given knowledge he has not. He is told plainly: you will not be able to be patient with me. They set out anyway. The man damages the boat that carried them for free, and Musa objects. He does something terrible to a boy, and Musa objects. He rebuilds a wall in a town that refused them food, and Musa objects again. Then he explains each one — the boat was about to be seized, the wall was hiding an orphan's inheritance — and they part.",
+h:"Musa was not wrong to be troubled. He was only seeing part of it."},
+
+{t:"Sulayman and the queen of Sheba",r:"Surah An-Naml · 27",s:"birds",
+b:"A hoopoe bird arrives late and says it has news he has not covered: a nation ruled by a woman, given everything, with a magnificent throne, worshipping the sun. Sulayman sends a letter. She is a careful ruler and tries gifts first; he sends them back. Then her own throne is brought to his court before she arrives, and altered, and she is asked whether it is hers. She says: it is as though it were. She enters a courtyard of glass, thinking it water, and there she gives up the sun.",
+h:"She was answered with wonder, not force, and she came willingly."},
+
+{t:"The valley of the ants",r:"Surah An-Naml · 27",s:"ants",
+b:"Sulayman is given command over the wind, the birds and the jinn — armies gathered and set in ranks. They come to a valley of ants, and one ant calls out to the others to get into their homes so that Sulayman and his soldiers do not crush them without noticing. He hears her, and smiles at what she said. Then he asks to be enabled to be thankful for the favour given to him.",
+h:"The largest kingdom on earth, stopped by an ant, and grateful for it."},
+
+{t:"The patience of Ayyub",r:"Surah Sad · 38 · Surah Al-Anbiya · 21",s:"spring",
+b:"He loses his wealth, then his children, then his health, until the illness is all that is left of his days. He does not accuse. He calls on his Lord with the shortest of complaints — that adversity has touched him, and that He is the most merciful of the merciful. He is told to strike the ground with his foot, and a cool spring rises there to wash in and to drink from. What he lost is returned, and the like of it with them.",
+h:"He kept his complaint between himself and God."},
+
+{t:"The army of the elephant",r:"Surah Al-Fil · 105",s:"dunes",
+b:"An army marches on the Sacred House with an elephant at its head, intending to bring the building down. Nothing in the city could have stopped it. Their plan is put into ruin — birds are sent over them in flocks, throwing stones of hard clay, until the army is left like a field of stalks eaten bare.",
+h:"The House was defended by the One whose House it is."},
+
+{t:"Adam and the garden",r:"Surah Al-A'raf · 7 · Surah Ta-Ha · 20",s:"garden",
+b:"He is made and taught the names of all things, and the angels are told to bow, and one refuses out of pride. He and his wife are given the garden and told to eat freely from it, except for one tree. They are whispered to, and they eat, and what was hidden of them becomes apparent to them. They are not left there in shame — they are given words to say, words of return, and they say them.",
+h:"The first mistake and the first repentance are told in the same breath."},
+
+{t:"The owners of the garden",r:"Surah Al-Qalam · 68",s:"wheat",
+b:"Men swear that they will pick the fruit of their garden at first light, and make no exception, and say nothing about the will of God — quietly deciding that no poor person will get any of it this year. While they sleep, something passes over the garden. They set out in the morning whispering to each other to keep the poor out, and find it black and stripped bare. At first they think they have come to the wrong place. Then the most balanced of them says: did I not tell you?",
+h:"They lost it the night they decided to keep it all."},
+
+{t:"Luqman's advice to his son",r:"Surah Luqman · 31",s:"path",
+b:"A father, given wisdom, teaches his son while advising him. Do not put anything beside God, he says — that is a great wrong. Be good to your parents, who carried you in weakness upon weakness. Know that even the weight of a mustard seed, hidden inside a rock or lost in the heavens or in the earth, will be brought out. Establish prayer, tell people to what is right, bear patiently what comes. Do not turn your cheek away from people in scorn or walk the earth pleased with yourself. Be moderate in your pace, and lower your voice.",
+h:"Everything he told his son to do begins with how he holds himself."}
+];
+/* ══════════════════════════════════════════════════════════
+   SCENE ENGINE
+   42 drawing primitives, composed into 66 named scenes.
+   Nothing here is an image — every scene is drawn on canvas
+   from the verse's own subject matter.
+   ══════════════════════════════════════════════════════════ */
+const PAL={
+ night:['#060a1c','#101a42','#04060f','#8fa7ff'],
+ indigo:['#0b0a2a','#241c5c','#05040f','#b9a7ff'],
+ void:['#04060e','#0b1230','#020308','#6f8bd8'],
+ slate:['#0a1220','#22344c','#05080f','#9fb8d8'],
+ teal:['#04202a','#0a5561','#01121a','#54d3d0'],
+ deepsea:['#021a26','#063f52','#010c14','#3fb8d8'],
+ storm:['#0b0f18','#232b3c','#05070c','#a8b6cc'],
+ dawnrose:['#23122f','#8a4258','#0b0715','#ffb08a'],
+ amber:['#1c1226','#7a4a1e','#0b0712','#ffc178'],
+ gold:['#1e1420','#8a6326','#0d0910','#ffd98a'],
+ sand:['#1a1220','#6f5232','#0b0810','#e8c08a'],
+ forest:['#05150e','#143f28','#030b07','#7fd6a0'],
+ moss:['#0a1710','#2a4a24','#050c07','#a8d67f'],
+ olive:['#12160c','#3d4a1e','#070a05','#cbd67f'],
+ mint:['#041a18','#0d4a44','#020d0c','#6fd8c4'],
+ plum:['#180a24','#45185a','#0a0512','#d99bff'],
+ copper:['#1a0d0c','#6b2f1c','#0c0605','#ff9a6a'],
+ ash:['#0d0f12','#2c3138','#06070a','#b9c2cc'],
+ ice:['#071522','#17415f','#04090f','#8fd8ff'],
+ lilac:['#140f26','#3a3070','#08060f','#c9bcff'],
+ wine:['#1c0812','#55152c','#0b040a','#ff9bb0'],
+ ember:['#180806','#5c1e0e','#0a0403','#ff8a4a']
+};
+
+/* group -> { L: layers, P: palettes }  (each pairing is one scene) */
+const GROUPS={
+ stars:{L:['stars','horizon'],P:['night','void']},
+ night:{L:['stars','mist','horizon'],P:['indigo','void']},
+ moon:{L:['stars','moon','ridgesFar'],P:['night','slate']},
+ sun:{L:['sunDisc','rays','horizon'],P:['gold','amber']},
+ dawn:{L:['dawnGlow','cloudBars','horizon'],P:['dawnrose','amber']},
+ light:{L:['rays','glow'],P:['lilac','gold']},
+ lamp:{L:['lampNiche','glow'],P:['amber','plum']},
+ clouds:{L:['clouds','horizon'],P:['slate','ash']},
+ lightning:{L:['stormClouds','bolt'],P:['storm','ash']},
+ rain:{L:['rain','ripples','horizon'],P:['slate','ice']},
+ mist:{L:['mist','ridgesFar','stars'],P:['ash','ice']},
+ sea:{L:['waves'],P:['deepsea','teal']},
+ twoseas:{L:['twoWaves'],P:['teal','mint']},
+ ship:{L:['waves','ship'],P:['deepsea','night']},
+ river:{L:['banks','river'],P:['mint','forest']},
+ spring:{L:['spring','ripples'],P:['mint','ice']},
+ mountains:{L:['ridges','stars'],P:['slate','plum']},
+ peaks:{L:['peaks','mist'],P:['ice','storm']},
+ hills:{L:['hills','clouds'],P:['moss','ash']},
+ dunes:{L:['dunes','sunDisc'],P:['sand','copper']},
+ sandwind:{L:['dunes','windStreaks'],P:['copper','gold']},
+ cave:{L:['cave','stars'],P:['void','ash']},
+ garden:{L:['hills','tree','blossom'],P:['forest','moss']},
+ palms:{L:['dunes','palms'],P:['amber','sand']},
+ olive:{L:['hills','tree'],P:['olive','moss']},
+ wheat:{L:['wheat','horizon'],P:['gold','olive']},
+ sprout:{L:['soil','sprout'],P:['moss','forest']},
+ birds:{L:['clouds','birds'],P:['dawnrose','ice']},
+ bees:{L:['grass','bees'],P:['gold','moss']},
+ ants:{L:['soil','ants'],P:['sand','olive']},
+ cattle:{L:['hills','cattle'],P:['olive','sand']},
+ path:{L:['ridgesFar','path'],P:['plum','sand']},
+ dew:{L:['grass','dew'],P:['mint','forest']}
+};
+
+const SCENES=[]; const SCENE_OF={};
+for(const g in GROUPS){
+  SCENE_OF[g]=[];
+  GROUPS[g].P.forEach(p=>{ SCENE_OF[g].push(SCENES.length); SCENES.push({g,L:GROUPS[g].L,p}); });
+}
+
+const cv=document.getElementById('scene'), cx=cv.getContext('2d');
+let W=0,H=0,FIELD=[];
+function sizeCanvas(){
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  W=cv.clientWidth=window.innerWidth; H=cv.clientHeight=window.innerHeight;
+  cv.width=Math.floor(W*dpr); cv.height=Math.floor(H*dpr);
+  cx.setTransform(dpr,0,0,dpr,0,0);
+  FIELD=[]; for(let i=0;i<200;i++) FIELD.push({x:Math.random(),y:Math.random(),r:Math.random()*1.5+.25,p:Math.random()*6.28,s:Math.random()*.6+.2});
+}
+window.addEventListener('resize',sizeCanvas);
+const hex=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+const mixc=(a,b,t)=>a.map((v,i)=>v+(b[i]-v)*t);
+const rgba=(a,al)=>`rgba(${a[0]|0},${a[1]|0},${a[2]|0},${al})`;
+const W_=x=>W*x, H_=y=>H*y;
+
+/* ── silhouette helpers ── */
+function silhouette(pts,alpha){
+  cx.beginPath(); cx.moveTo(0,H);
+  pts.forEach(p=>cx.lineTo(p[0],p[1]));
+  cx.lineTo(W,H); cx.closePath();
+  cx.fillStyle=`rgba(0,0,0,${alpha})`; cx.fill();
+}
+function ridgeline(base,amp,n,seed,alpha){
+  const pts=[];
+  for(let i=0;i<=n;i++){
+    const x=W*i/n;
+    const y=H*base - Math.abs(Math.sin(i*1.7+seed))*H*amp - Math.abs(Math.cos(i*.9+seed*2))*H*amp*.35;
+    pts.push([x,y]);
+  }
+  silhouette(pts,alpha); return pts;
+}
+
+/* ══ 42 LAYER PRIMITIVES ══ */
+const L={
+ stars(t){ FIELD.forEach(s=>{ const tw=.3+.7*Math.abs(Math.sin(t*.5*s.s+s.p));
+   cx.fillStyle=`rgba(255,255,255,${tw*.7})`; cx.beginPath(); cx.arc(s.x*W,s.y*H*.78,s.r,0,7); cx.fill(); }); },
+ horizon(){ const g=cx.createLinearGradient(0,H*.72,0,H);
+   g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,.55)');
+   cx.fillStyle=g; cx.fillRect(0,H*.72,W,H*.28);
+   cx.strokeStyle='rgba(255,255,255,.10)'; cx.beginPath(); cx.moveTo(0,H*.80); cx.lineTo(W,H*.80); cx.stroke(); },
+ moon(t){ const x=W*.74,y=H*.20,r=Math.min(W,H)*.075;
+   const g=cx.createRadialGradient(x,y,0,x,y,r*4.5);
+   g.addColorStop(0,'rgba(255,255,255,.20)'); g.addColorStop(1,'rgba(255,255,255,0)');
+   cx.fillStyle=g; cx.fillRect(0,0,W,H);
+   cx.fillStyle='rgba(255,252,240,.88)'; cx.beginPath(); cx.arc(x,y,r,0,7); cx.fill();
+   cx.globalCompositeOperation='destination-out';
+   cx.beginPath(); cx.arc(x-r*.42,y-r*.20,r*.92,0,7); cx.fill();
+   cx.globalCompositeOperation='source-over'; },
+ sunDisc(t){ const x=W*.30,y=H*.26,r=Math.min(W,H)*.065;
+   const g=cx.createRadialGradient(x,y,0,x,y,H*.5);
+   g.addColorStop(0,'rgba(255,226,178,.30)'); g.addColorStop(1,'rgba(255,200,150,0)');
+   cx.fillStyle=g; cx.fillRect(0,0,W,H);
+   cx.fillStyle='rgba(255,244,224,.75)'; cx.beginPath(); cx.arc(x,y,r,0,7); cx.fill(); },
+ rays(t){ cx.save(); cx.translate(W*.5,H*.28); cx.rotate(t*.035);
+   for(let i=0;i<16;i++){ cx.rotate(6.283/16);
+     const len=Math.max(W,H)*(.62+.13*Math.sin(t*.5+i));
+     const g=cx.createLinearGradient(0,0,0,-len);
+     g.addColorStop(0,'rgba(255,255,255,.10)'); g.addColorStop(1,'rgba(255,255,255,0)');
+     cx.fillStyle=g; cx.beginPath(); cx.moveTo(0,0); cx.lineTo(-8,-len); cx.lineTo(8,-len); cx.closePath(); cx.fill(); }
+   cx.restore(); },
+ glow(t){ const r=H*.34+Math.sin(t*.4)*H*.02;
+   const g=cx.createRadialGradient(W*.5,H*.30,0,W*.5,H*.30,r);
+   g.addColorStop(0,'rgba(255,255,255,.20)'); g.addColorStop(1,'rgba(255,255,255,0)');
+   cx.fillStyle=g; cx.fillRect(0,0,W,H); },
+ dawnGlow(t){ const y=H*.74+Math.sin(t*.14)*5;
+   const g=cx.createRadialGradient(W*.5,y,0,W*.5,y,H*.6);
+   g.addColorStop(0,'rgba(255,214,170,.36)'); g.addColorStop(.5,'rgba(255,170,130,.10)'); g.addColorStop(1,'rgba(255,150,120,0)');
+   cx.fillStyle=g; cx.fillRect(0,0,W,H);
+   cx.fillStyle='rgba(255,236,212,.30)'; cx.beginPath(); cx.arc(W*.5,y,Math.min(W,H)*.08,0,7); cx.fill(); },
+ cloudBars(t){ for(let i=0;i<6;i++){ const y=H*(.50+i*.052)+Math.sin(t*.12+i)*3;
+   cx.fillStyle=`rgba(255,255,255,${.055-i*.007})`;
+   cx.fillRect(W*(.04+i*.05)-Math.sin(t*.1+i)*22,y,W*(.54-i*.06),1.8); } },
+ lampNiche(t){ const cxp=W*.5, cyp=H*.42, w=Math.min(W,H)*.16;
+   cx.strokeStyle='rgba(255,255,255,.22)'; cx.lineWidth=1.4;
+   cx.beginPath(); cx.moveTo(cxp-w,cyp+w*1.5); cx.lineTo(cxp-w,cyp);
+   cx.arc(cxp,cyp,w,Math.PI,0); cx.lineTo(cxp+w,cyp+w*1.5); cx.stroke();
+   const fl=.72+.28*Math.abs(Math.sin(t*1.6));
+   const g=cx.createRadialGradient(cxp,cyp+w*.35,0,cxp,cyp+w*.35,w*2.6);
+   g.addColorStop(0,`rgba(255,222,160,${.42*fl})`); g.addColorStop(1,'rgba(255,200,140,0)');
+   cx.fillStyle=g; cx.fillRect(0,0,W,H);
+   cx.fillStyle=`rgba(255,240,205,${.85*fl})`; cx.beginPath(); cx.ellipse(cxp,cyp+w*.3,w*.13,w*.2,0,0,7); cx.fill(); },
+ clouds(t){ for(let i=0;i<8;i++){ const x=((i*.17+t*.012*(1+i%3))%1.4-.2)*W, y=H*(.14+(i%4)*.12),
+     rw=W*(.15+(i%3)*.07);
+   const g=cx.createRadialGradient(x,y,0,x,y,rw);
+   g.addColorStop(0,`rgba(255,255,255,${.12-(i%3)*.02})`); g.addColorStop(1,'rgba(255,255,255,0)');
+   cx.fillStyle=g; cx.beginPath(); cx.ellipse(x,y,rw,rw*.3,0,0,7); cx.fill(); } },
+ stormClouds(t){ for(let i=0;i<7;i++){ const x=((i*.19+t*.02)%1.4-.2)*W, y=H*(.10+(i%3)*.10), rw=W*(.20+(i%3)*.06);
+   const g=cx.createRadialGradient(x,y,0,x,y,rw);
+   g.addColorStop(0,'rgba(0,0,0,.42)'); g.addColorStop(1,'rgba(0,0,0,0)');
+   cx.fillStyle=g; cx.beginPath(); cx.ellipse(x,y,rw,rw*.34,0,0,7); cx.fill(); } },
+ bolt(t){ const ph=(t*.55)%1; if(ph>.09) return;
+   const a=(1-ph/.09)*.65; cx.strokeStyle=`rgba(255,255,255,${a})`; cx.lineWidth=1.8;
+   let x=W*.42,y=H*.14; cx.beginPath(); cx.moveTo(x,y);
+   for(let i=0;i<7;i++){ x+=(i%2?26:-20); y+=H*.055; cx.lineTo(x,y); } cx.stroke();
+   cx.fillStyle=`rgba(255,255,255,${a*.10})`; cx.fillRect(0,0,W,H); },
+ mist(t){ for(let i=0;i<5;i++){ const y=H*(.52+i*.09)+Math.sin(t*.18+i)*6;
+   const g=cx.createLinearGradient(0,y-H*.05,0,y+H*.05);
+   g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(.5,`rgba(255,255,255,${.055-i*.007})`); g.addColorStop(1,'rgba(255,255,255,0)');
+   cx.fillStyle=g; cx.fillRect(0,y-H*.05,W,H*.1); } },
+ rain(t){ cx.strokeStyle='rgba(255,255,255,.24)'; cx.lineWidth=1;
+   FIELD.forEach((s,i)=>{ if(i%2) return;
+     const y=((s.y+t*(.10+s.s*.14))%1.2)*H-60, x=s.x*W+Math.sin(t*.2+s.p)*10;
+     cx.beginPath(); cx.moveTo(x,y); cx.lineTo(x-3,y+16+s.s*14); cx.stroke(); }); },
+ ripples(t){ for(let i=0;i<4;i++){ const r=((t*.28+i*.25)%1);
+   cx.strokeStyle=`rgba(255,255,255,${.16*(1-r)})`; cx.lineWidth=1;
+   cx.beginPath(); cx.ellipse(W*(.18+i*.22),H*.92,r*160,r*22,0,0,7); cx.stroke(); } },
+ waves(t){ for(let l=0;l<6;l++){ const base=H*(.56+l*.078), amp=8+l*7;
+   cx.beginPath(); cx.moveTo(0,H);
+   for(let x=0;x<=W;x+=8) cx.lineTo(x, base+Math.sin(x/(150-l*16)+t*(.22+l*.1)+l)*amp+Math.sin(x/61+t*.36)*3.5);
+   cx.lineTo(W,H); cx.closePath(); cx.fillStyle=`rgba(255,255,255,${.028+l*.013})`; cx.fill(); } },
+ twoWaves(t){ for(let side=0;side<2;side++){ for(let l=0;l<4;l++){
+     const base=H*(.58+l*.09), amp=6+l*6, x0=side?W*.52:0, x1=side?W:W*.48;
+     cx.beginPath(); cx.moveTo(x0,H);
+     for(let x=x0;x<=x1;x+=8) cx.lineTo(x, base+Math.sin(x/(130-l*14)+t*(side?.30:.20)+l+side*2)*amp);
+     cx.lineTo(x1,H); cx.closePath();
+     cx.fillStyle=side?`rgba(255,255,255,${.05+l*.014})`:`rgba(0,0,0,${.10+l*.05})`; cx.fill(); } }
+   cx.strokeStyle='rgba(255,255,255,.22)'; cx.setLineDash([5,7]);
+   cx.beginPath(); cx.moveTo(W*.5,H*.52); cx.lineTo(W*.5,H); cx.stroke(); cx.setLineDash([]); },
+ ship(t){ const x=W*.63+Math.sin(t*.3)*10, y=H*.60+Math.sin(t*.5)*5;
+   cx.fillStyle='rgba(0,0,0,.62)';
+   cx.beginPath(); cx.moveTo(x-34,y); cx.lineTo(x+34,y); cx.lineTo(x+22,y+11); cx.lineTo(x-22,y+11); cx.closePath(); cx.fill();
+   cx.beginPath(); cx.moveTo(x,y-2); cx.lineTo(x,y-46); cx.lineTo(x+26,y-4); cx.closePath(); cx.fill();
+   cx.beginPath(); cx.moveTo(x-2,y-4); cx.lineTo(x-2,y-38); cx.lineTo(x-22,y-6); cx.closePath(); cx.fill(); },
+ banks(){ cx.fillStyle='rgba(0,0,0,.36)';
+   cx.beginPath(); cx.moveTo(0,H); cx.lineTo(0,H*.48);
+   for(let y=H*.48;y<=H;y+=16) cx.lineTo(W*.30+Math.sin(y/150)*W*.07,y); cx.closePath(); cx.fill();
+   cx.beginPath(); cx.moveTo(W,H); cx.lineTo(W,H*.48);
+   for(let y=H*.48;y<=H;y+=16) cx.lineTo(W*.72+Math.sin(y/150+2)*W*.07,y); cx.closePath(); cx.fill(); },
+ river(t){ for(let i=0;i<10;i++){ const y=H*.52+i*(H*.05);
+   cx.strokeStyle=`rgba(255,255,255,${.09+.05*Math.sin(t+i)})`; cx.lineWidth=1; cx.beginPath();
+   for(let x=W*.34;x<W*.70;x+=10) cx.lineTo(x,y+Math.sin(x/40+t*.8+i)*2.4); cx.stroke(); } },
+ spring(t){ const x=W*.5,y=H*.66;
+   cx.fillStyle='rgba(0,0,0,.4)'; cx.beginPath(); cx.ellipse(x,y+18,W*.18,H*.045,0,0,7); cx.fill();
+   for(let i=0;i<14;i++){ const ph=(t*.7+i/14)%1, r=ph*W*.16;
+     cx.strokeStyle=`rgba(255,255,255,${.22*(1-ph)})`; cx.lineWidth=1;
+     cx.beginPath(); cx.ellipse(x,y+18,r,r*.26,0,0,7); cx.stroke(); }
+   for(let i=0;i<10;i++){ const ph=(t*.9+i/10)%1;
+     cx.fillStyle=`rgba(255,255,255,${.4*(1-ph)})`;
+     cx.beginPath(); cx.arc(x+Math.sin(i*2)*12, y+18-ph*H*.12, 1.6,0,7); cx.fill(); } },
+ ridges(t){ ridgeline(.68,.10,7,1.2,.32); ridgeline(.78,.075,11,3.4,.48); ridgeline(.88,.05,5,5.1,.62); },
+ ridgesFar(){ ridgeline(.76,.06,9,2.2,.34); },
+ peaks(t){ [[.62,.20,4,.9],[.72,.15,6,2.6],[.84,.09,8,4.4]].forEach((r,i)=>{
+     const pts=ridgeline(r[0],r[1],r[2],r[3],.30+i*.16);
+     if(i===0){ cx.strokeStyle='rgba(255,255,255,.30)'; cx.lineWidth=1.2; cx.beginPath();
+       pts.forEach((p,j)=>j?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1])); cx.stroke(); } }); },
+ hills(){ for(let l=0;l<3;l++){ const pts=[];
+     for(let x=0;x<=W;x+=14) pts.push([x,H*(.72+l*.08)-Math.sin(x/230+l*1.6)*H*.045]);
+     silhouette(pts,.20+l*.17); } },
+ dunes(t){ for(let l=0;l<4;l++){ const pts=[];
+     for(let x=0;x<=W;x+=12) pts.push([x,H*(.62+l*.09)-Math.sin(x/(300-l*40)+l*2.1)*H*.06-Math.cos(x/(120+l*30))*H*.012]);
+     silhouette(pts,.15+l*.15);
+     cx.strokeStyle=`rgba(255,255,255,${.07-l*.014})`; cx.lineWidth=1; cx.beginPath();
+     pts.forEach((p,j)=>j?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1])); cx.stroke(); } },
+ windStreaks(t){ for(let i=0;i<26;i++){ const s=FIELD[i], y=H*(.30+s.y*.35),
+     x=((s.x+t*.10*s.s)%1.2-.1)*W;
+   cx.strokeStyle=`rgba(255,255,255,${.10+s.s*.12})`; cx.lineWidth=1;
+   cx.beginPath(); cx.moveTo(x,y); cx.lineTo(x+40+s.s*70,y+3); cx.stroke(); } },
+ cave(t){ cx.save(); cx.fillStyle='rgba(0,0,0,.80)';
+   cx.beginPath(); cx.rect(0,0,W,H);
+   cx.moveTo(W*.5,H*.30);
+   cx.ellipse(W*.5,H*.56,W*.20,H*.30,0,0,7,true);
+   cx.fill('evenodd'); cx.restore();
+   cx.strokeStyle='rgba(255,255,255,.13)'; cx.lineWidth=1.2;
+   cx.beginPath(); cx.ellipse(W*.5,H*.56,W*.20,H*.30,0,0,7); cx.stroke(); },
+ tree(t){ [[.26,.13],[.58,.16],[.80,.11]].forEach((d,i)=>{
+     const x=W*d[0], base=H*.76, hh=H*d[1], sw=Math.sin(t*.3+i)*5;
+     cx.strokeStyle='rgba(0,0,0,.6)'; cx.lineWidth=2.4;
+     cx.beginPath(); cx.moveTo(x,base); cx.quadraticCurveTo(x+sw*.5,base-hh*.55,x+sw,base-hh); cx.stroke();
+     cx.fillStyle='rgba(0,0,0,.5)';
+     cx.beginPath(); cx.ellipse(x+sw,base-hh,hh*.42,hh*.32,0,0,7); cx.fill(); }); },
+ blossom(t){ for(let i=0;i<34;i++){ const s=FIELD[i], y=(((s.y-t*.022*s.s)%1)+1)%1;
+   cx.fillStyle=`rgba(255,255,255,${.14*s.s+.05})`;
+   cx.beginPath(); cx.arc(s.x*W+Math.sin(t*.3+s.p)*16, y*H, s.r*.9,0,7); cx.fill(); } },
+ palms(t){ [[.18,.16],[.34,.12],[.70,.15],[.86,.10]].forEach((d,i)=>{
+     const x=W*d[0], base=H*.80, hh=H*d[1], sw=Math.sin(t*.34+i)*6;
+     cx.strokeStyle='rgba(0,0,0,.66)'; cx.lineWidth=2.6;
+     cx.beginPath(); cx.moveTo(x,base); cx.quadraticCurveTo(x+sw,base-hh*.6,x+sw*1.6,base-hh); cx.stroke();
+     cx.lineWidth=1.8;
+     for(let f=0;f<7;f++){ const a=-2.6+f*.52;
+       cx.beginPath(); cx.moveTo(x+sw*1.6,base-hh);
+       cx.quadraticCurveTo(x+sw*1.6+Math.cos(a)*hh*.30, base-hh+Math.sin(a)*hh*.20,
+                           x+sw*1.6+Math.cos(a)*hh*.52, base-hh+Math.sin(a)*hh*.42+hh*.06); cx.stroke(); } }); },
+ wheat(t){ for(let i=0;i<70;i++){ const x=(i/70)*W+((i%3)*7), base=H*(.82+(i%5)*.02),
+     hh=H*(.10+(i%4)*.012), sw=Math.sin(t*.6+i*.3)*4;
+   cx.strokeStyle='rgba(0,0,0,.42)'; cx.lineWidth=1.4;
+   cx.beginPath(); cx.moveTo(x,base); cx.quadraticCurveTo(x+sw*.5,base-hh*.6,x+sw,base-hh); cx.stroke();
+   cx.fillStyle='rgba(0,0,0,.46)';
+   cx.beginPath(); cx.ellipse(x+sw,base-hh,2.6,6,sw*.05,0,7); cx.fill(); } },
+ grass(t){ for(let i=0;i<90;i++){ const x=(i/90)*W+((i%4)*4), base=H*(.86+(i%4)*.02),
+     hh=H*(.06+(i%5)*.01), sw=Math.sin(t*.8+i*.4)*5;
+   cx.strokeStyle=`rgba(0,0,0,${.30+(i%3)*.1})`; cx.lineWidth=1.3;
+   cx.beginPath(); cx.moveTo(x,base); cx.quadraticCurveTo(x+sw*.4,base-hh*.6,x+sw,base-hh); cx.stroke(); } },
+ soil(){ const pts=[]; for(let x=0;x<=W;x+=18) pts.push([x,H*.80+Math.sin(x/90)*6]);
+   silhouette(pts,.55); },
+ sprout(t){ const x=W*.5, base=H*.80, gr=Math.min(1,(Math.sin(t*.35)*.5+.5)+.35), hh=H*.16*gr;
+   cx.strokeStyle='rgba(255,255,255,.34)'; cx.lineWidth=2;
+   cx.beginPath(); cx.moveTo(x,base); cx.lineTo(x,base-hh); cx.stroke();
+   [-1,1].forEach(s=>{ cx.fillStyle='rgba(255,255,255,.26)'; cx.beginPath();
+     cx.ellipse(x+s*hh*.28,base-hh*.82,hh*.28,hh*.13,s*.5,0,7); cx.fill(); });
+   const g=cx.createRadialGradient(x,base-hh,0,x,base-hh,H*.2);
+   g.addColorStop(0,'rgba(255,255,255,.12)'); g.addColorStop(1,'rgba(255,255,255,0)');
+   cx.fillStyle=g; cx.fillRect(0,0,W,H); },
+ birds(t){ for(let i=0;i<11;i++){ const ph=(t*.045+i*.06)%1.25-.12,
+     x=ph*W, y=H*(.26+(i%4)*.055)+Math.sin(t*.9+i)*7, w=7+(i%3)*3,
+     fl=Math.sin(t*3.2+i)*.5;
+   cx.strokeStyle='rgba(0,0,0,.58)'; cx.lineWidth=1.6;
+   cx.beginPath(); cx.moveTo(x-w,y+fl*w*.5); cx.quadraticCurveTo(x,y-w*.42,x+w,y+fl*w*.5); cx.stroke(); } },
+ bees(t){ for(let i=0;i<16;i++){ const s=FIELD[i],
+     x=W*(.15+s.x*.7)+Math.sin(t*1.4+s.p)*26, y=H*(.35+s.y*.4)+Math.cos(t*1.1+s.p*2)*20;
+   cx.fillStyle='rgba(255,236,160,.75)'; cx.beginPath(); cx.arc(x,y,2,0,7); cx.fill();
+   cx.strokeStyle='rgba(255,236,160,.16)'; cx.lineWidth=1;
+   cx.beginPath(); cx.arc(x,y,7+Math.sin(t*4+i)*2,0,7); cx.stroke(); } },
+ ants(t){ for(let i=0;i<22;i++){ const ph=((t*.05+i*.045)%1),
+     x=ph*W, y=H*.80+Math.sin(ph*9)*7;
+   cx.fillStyle='rgba(0,0,0,.62)';
+   cx.beginPath(); cx.ellipse(x,y,2.6,1.5,Math.sin(ph*9)*.3,0,7); cx.fill(); }
+   cx.strokeStyle='rgba(255,255,255,.07)'; cx.lineWidth=1; cx.beginPath();
+   for(let x=0;x<=W;x+=10) cx.lineTo(x,H*.80+Math.sin(x/W*9)*7); cx.stroke(); },
+ cattle(t){ [[.22,1],[.36,.85],[.62,1.05],[.78,.9]].forEach((d,i)=>{
+     const x=W*d[0]+Math.sin(t*.12+i)*8, y=H*.79, s=Math.min(W,H)*.035*d[1];
+   cx.fillStyle='rgba(0,0,0,.6)';
+   cx.beginPath(); cx.ellipse(x,y,s*1.3,s*.62,0,0,7); cx.fill();
+   cx.beginPath(); cx.ellipse(x+s*1.25,y-s*.5,s*.42,s*.32,0,0,7); cx.fill();
+   cx.strokeStyle='rgba(0,0,0,.6)'; cx.lineWidth=2;
+   [-.7,-.2,.35,.8].forEach(o=>{ cx.beginPath(); cx.moveTo(x+s*o,y+s*.45); cx.lineTo(x+s*o,y+s*1.15); cx.stroke(); }); }); },
+ path(t){ cx.save();
+   const top=H*.50, bot=H;
+   const g=cx.createLinearGradient(0,top,0,bot);
+   g.addColorStop(0,'rgba(255,255,255,.02)'); g.addColorStop(1,'rgba(255,255,255,.13)');
+   cx.fillStyle=g;
+   cx.beginPath(); cx.moveTo(W*.485,top); cx.lineTo(W*.515,top); cx.lineTo(W*.78,bot); cx.lineTo(W*.22,bot); cx.closePath(); cx.fill();
+   cx.strokeStyle='rgba(255,255,255,.16)'; cx.lineWidth=1;
+   for(let i=0;i<9;i++){ const p=i/9, y=top+(bot-top)*p*p, wdt=(W*.03+(W*.28-W*.03)*p*p);
+     cx.globalAlpha=.5+p*.5; cx.beginPath(); cx.moveTo(W*.5-wdt,y); cx.lineTo(W*.5+wdt,y); cx.stroke(); }
+   cx.globalAlpha=1;
+   const g2=cx.createRadialGradient(W*.5,top,0,W*.5,top,H*.22);
+   g2.addColorStop(0,'rgba(255,255,255,.16)'); g2.addColorStop(1,'rgba(255,255,255,0)');
+   cx.fillStyle=g2; cx.fillRect(0,0,W,H); cx.restore(); },
+ dew(t){ for(let i=0;i<26;i++){ const s=FIELD[i], x=s.x*W, y=H*(.60+s.y*.32),
+     sp=.5+.5*Math.abs(Math.sin(t*.6+s.p));
+   cx.fillStyle=`rgba(255,255,255,${.30*sp})`; cx.beginPath(); cx.arc(x,y,1.6+s.s,0,7); cx.fill();
+   cx.fillStyle=`rgba(255,255,255,${.08*sp})`; cx.beginPath(); cx.arc(x,y,5+s.s*4,0,7); cx.fill(); } }
+};
+
+/* ── render loop with palette + layer cross-fade ── */
+let curIdx=0, prevIdx=null, fade=1,
+    curPal=[hex(PAL.night[0]),hex(PAL.night[1]),hex(PAL.night[2])], tgtPal=curPal,
+    motionOn=true, t0=performance.now();
+
+function setSceneIdx(i){
+  if(i===curIdx || i==null) return;
+  prevIdx=curIdx; curIdx=i; fade=0;
+  const p=PAL[SCENES[i].p];
+  tgtPal=[hex(p[0]),hex(p[1]),hex(p[2])];
+  document.documentElement.style.setProperty('--glow',p[3]);
+}
+function sceneForGroup(g,seed){
+  const arr=SCENE_OF[g]||SCENE_OF.stars;
+  return arr[Math.abs(seed)%arr.length];
+}
+function drawScene(i,t,alpha){
+  cx.globalAlpha=alpha;
+  SCENES[i].L.forEach(n=>{ cx.save(); try{ L[n](t); }catch(e){} cx.restore(); });
+  cx.globalAlpha=1;
+}
+function frame(now){
+  const t = motionOn ? (now-t0)/1000 : 14;
+  curPal=curPal.map((c,i)=>mixc(c,tgtPal[i],.05));
+  if(fade<1) fade=Math.min(1,fade+.015);
+  const g=cx.createLinearGradient(0,0,W*.35,H);
+  g.addColorStop(0,rgba(curPal[0],1)); g.addColorStop(.55,rgba(curPal[1],1)); g.addColorStop(1,rgba(curPal[2],1));
+  cx.fillStyle=g; cx.fillRect(0,0,W,H);
+  if(prevIdx!=null && fade<1) drawScene(prevIdx,t,1-fade);
+  drawScene(curIdx,t,fade);
+  requestAnimationFrame(frame);
+}
+
+/* ══════════════════════════════════════════════════════════
+   RANDOMNESS — a shuffle bag, not a dice roll.
+   Every verse in the current pool is shown once before any
+   verse repeats, and the order reshuffles each round.
+   ══════════════════════════════════════════════════════════ */
+function Bag(items){ this.src=items; this.q=[]; this.lastSeen=null; }
+Bag.prototype.refill=function(){
+  this.q=this.src.slice();
+  for(let i=this.q.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [this.q[i],this.q[j]]=[this.q[j],this.q[i]]; }
+  if(this.q.length>1 && this.q[this.q.length-1]===this.lastSeen) [this.q[0],this.q[this.q.length-1]]=[this.q[this.q.length-1],this.q[0]];
+};
+Bag.prototype.next=function(){
+  if(!this.q.length) this.refill();
+  const v=this.q.pop(); this.lastSeen=v; return v;
+};
+Bag.prototype.remaining=function(){ return this.q.length; };
+
+/* ══ classify any verse in the Qur'an by what it speaks about ══ */
+const RULES=[['ship',/\bship|sail|vessel|\bark\b/i],['twoseas',/two seas|barrier between/i],
+ ['sea',/\bsea\b|\bocean|waves|the deep/i],['lightning',/lightning|thunder/i],
+ ['rain',/\brain|showers|water from the sky|sends down water/i],['clouds',/\bcloud/i],
+ ['sandwind',/\bwinds?\b/i],['cave',/\bcave\b/i],['bees',/\bbee|honey/i],['ants',/\bants?\b/i],
+ ['birds',/\bbird/i],['cattle',/cattle|livestock|sheep|camel|grazing/i],['palms',/palm/i],
+ ['olive',/olive/i],['wheat',/grain|crops|harvest|sown|corn|seed/i],
+ ['garden',/garden|orchard|vineyard|fruit|vines/i],['river',/rivers|streams|flow beneath/i],
+ ['spring',/spring|fountain|\bwell\b/i],['mountains',/mountain/i],
+ ['dunes',/desert|sand|barren|dry land|parched/i],['stars',/\bstars?\b|constellation/i],
+ ['moon',/\bmoon/i],['sun',/\bsun\b|sunlight/i],['dawn',/dawn|daybreak|morning|forenoon/i],
+ ['night',/\bnight/i],['lamp',/niche|lamp/i],['light',/\blight\b|darkness/i],
+ ['path',/straight path|the way|his steps|footsteps|journey|travel/i],
+ ['sprout',/grow|earth to life|dead land|revive/i],['dew',/tranquil|serenity|calm|peace/i]];
+const SPREAD=['stars','night','moon','dawn','clouds','mist','hills','mountains','path','sea','dunes','river','garden','light','peaks'];
+function classify(text,seed){
+  for(const [g,re] of RULES) if(re.test(text)) return g;
+  return SPREAD[Math.abs(seed)%SPREAD.length];
+}
+
+/* ══════════════════════════════════════════════════════════
+   TEXT SOURCES
+   English is bundled in this file and needs no connection.
+   Other languages / the whole Qur'an are fetched once from a
+   CDN, with three mirrors tried in turn.
+   ══════════════════════════════════════════════════════════ */
+const MIRRORS=[
+  'https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/',
+  'https://raw.githubusercontent.com/fawazahmed0/quran-api/1/',
+  'https://cdn.statically.io/gh/fawazahmed0/quran-api/1/'
+];
+async function fetchJSON(path){
+  let err=null;
+  for(const m of MIRRORS){
+    try{
+      const r=await fetch(m+path,{cache:'force-cache'});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return await r.json();
+    }catch(e){ err=e; }
+  }
+  throw err||new Error('unreachable');
+}
+
+/* ══════════════════════════════════════════════════════════
+   STORAGE — kept on this device only.
+   Uses the browser's own storage when the page is hosted
+   (github.io, your own domain, or a local file). Inside a
+   sandboxed preview that storage is blocked, so it quietly
+   falls back to memory for the length of the visit.
+   ══════════════════════════════════════════════════════════ */
+const MEM={};
+const store={
+  get(k){ try{ const v=localStorage.getItem('nur.'+k); if(v!=null) return JSON.parse(v); }catch(e){} return (k in MEM)?MEM[k]:null; },
+  set(k,v){ MEM[k]=v; try{ localStorage.setItem('nur.'+k,JSON.stringify(v)); }catch(e){} },
+  del(k){ delete MEM[k]; try{ localStorage.removeItem('nur.'+k); }catch(e){} }
+};
+
+/* ══ interface strings — English is the source, everything else is translated once and cached ══ */
+const STR={
+'menu.mood':'Mood','menu.stories':'Stories','menu.hearted':'Hearted','menu.language':'Language',
+'menu.settings':'Settings','menu.about':'About',
+'mood.title':'Mood',
+'mood.lede':"Name where you are right now. You'll be given verses that meet you there, in a different order every time.",
+'mood.share':'Say it in your own words',
+'mood.shareSub':'Write a sentence about how you are, and the right verses will be chosen for it.',
+'mood.placeholder':"I keep snapping at people and I don't know why…",
+'mood.detect':'Find my verses','mood.thinking':'Reading what you wrote…',
+'mood.group.feeling':'How you feel','mood.group.struggle':'What you are struggling with','mood.group.life':'Where you are in life',
+'mood.count':'verses',
+'lang.lede':'Every option here is a published scholarly translation, not a machine translation, so the meaning of the verse stays sound in any language.',
+'lang.note':'English is built in and works with no connection. Any other language is downloaded once, then kept for the rest of your visit.',
+'lang.search':'Search languages','lang.builtin':'Built in · Rowwad Translation Center',
+'lang.loading':'Loading the list of translations','lang.downloading':'Downloading…',
+'lang.offline':'The list of translations needs a connection. English is built in and keeps working.',
+'lang.failed':'That translation could not be downloaded. English is built in and still works.',
+'lang.none':'No language matches that',
+'set.theme':'Theme','set.themeSub':'Dark for night reading, light for daylight. Auto follows your device.',
+'set.dark':'Dark','set.light':'Light','set.auto':'Auto',
+'set.font':'Font','set.fontSub':'Four typefaces for the verse and the interface.',
+'set.size':'Text size','set.sizeSub':'How large the verse is set.',
+'set.motion':'Moving scenes','set.motionSub':'Turn off to hold every scene still.',
+'set.on':'On','set.off':'Off',
+'set.scene':'Scene','set.sceneSub':'Draw a scene from what the verse speaks about, or keep one calm night sky throughout.',
+'set.fromVerse':'From verse','set.night':'Night',
+'set.ref':'Verse reference','set.refSub':'Show the surah name and verse number under the verse.',
+'set.pool':'Where verses come from','set.poolSub':'Chosen keeps to verses picked and tagged by mood. Whole Qur\'an draws from all 6,236, and needs a connection the first time.',
+'set.chosen':'Chosen','set.all':"Whole Qur'an",
+'set.ai':'Understanding and translation','set.aiSub':'Powers the explanation you get by swiping up, reading your own words in Mood, and translating this interface and the stories. Paste an API key to switch it on once this page is on your own site.',
+'set.aiKey':'Paste an API key','set.aiSave':'Save','set.aiClear':'Remove key','set.aiOn':'Working','set.aiOff':'Not set up',
+'set.gestures':'How to use it','set.gesturesSub':'Tap anywhere for the next verse. Double tap to heart it and keep it. Swipe up to have it explained. Everything you heart stays on this device.',
+'set.clear':'Hearted verses','set.clearSub':'Remove everything you have hearted on this device.','set.clearBtn':'Clear all',
+'hearted.empty':'Nothing hearted yet. Double tap a verse or a story you want to keep, and it will wait for you here.',
+'hearted.count':'kept on this device',
+'sheet.explain':'What this means','sheet.mood':'How are you',
+'sheet.thinking':'Reading the verse…',
+'sheet.aiOff':'Explanations are written for you as you ask for them, so this part needs to be switched on in Settings first. The verse itself never needs it.',
+'sheet.failed':'That could not be reached just now. Try again in a moment.',
+'hint':'Tap for another · Double tap to heart · Swipe up to understand',
+'pill.all':"Whole Qur'an",'pill.stories':'Stories','pill.hearted':'Hearted'
+};
+let UI={}, LANGNAME='English';
+const t=k=>(UI[k]||STR[k]||k);
+const tOpt=k=>(UI[k]||STR[k]||null);   /* mood names live outside STR, so this may be empty */
+function applyStrings(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent=t(el.dataset.i18n); });
+  document.getElementById('langsearch').placeholder=t('lang.search');
+  document.getElementById('langnote').innerHTML=t('lang.note');
+  document.getElementById('hint').textContent=t('hint');
+  buildMoodGrid(); buildSettings(); buildAbout(); renderHearted();
+}
+
+/* ══ AI ══ */
+const AI_MODEL='claude-sonnet-4-6';   /* change this if your key is for a different model */
+let aiWorks=null;
+async function ai(system,user,maxTokens){
+  const key=store.get('apikey');
+  const headers={'content-type':'application/json'};
+  if(key){ headers['x-api-key']=key; headers['anthropic-version']='2023-06-01';
+           headers['anthropic-dangerous-direct-browser-access']='true'; }
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers,
+    body:JSON.stringify({model:AI_MODEL,max_tokens:maxTokens||1000,system,messages:[{role:'user',content:user}]})});
+  if(!r.ok) throw new Error('AI '+r.status);
+  const d=await r.json();
+  aiWorks=true;
+  return (d.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();
+}
+const unfence=s=>s.replace(/^```[a-z]*\s*/i,'').replace(/```\s*$/,'').trim();
+
+/* ══ state ══ */
+const S={ edition:'built-in', dir:'ltr', mood:null, mode:'verse', pool:'curated',
+          theme:store.get('theme')||'dark', font:store.get('font')||'nur',
+          size:store.get('size')||'m', showRef:store.get('showRef')||'on',
+          sceneMode:store.get('sceneMode')||'verse', motion:store.get('motion')||'on' };
+const EDCACHE={}; let fullQuran=null;
+const UICACHE=store.get('uicache')||{};
+const STORYCACHE=store.get('storycache')||{};
+const EXPCACHE={};
+let likes=store.get('likes')||[];
+
+const verseEl=document.getElementById('verse'), refEl=document.getElementById('ref'),
+      slab=document.getElementById('slab'), stage=document.getElementById('stage');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const gloss=s=>esc(s).replace(/(\[[^\]]{1,60}\]|˹[^˺]{1,60}˺)/g,'<span class="gloss">$1</span>');
+
+/* ══ theme + font ══ */
+const mqDark=window.matchMedia('(prefers-color-scheme: dark)');
+function applyTheme(){
+  const v = S.theme==='auto' ? (mqDark.matches?'dark':'light') : S.theme;
+  document.documentElement.setAttribute('data-theme',v);
+  document.querySelector('meta[name=theme-color]').setAttribute('content',v==='dark'?'#05070d':'#f7f4ed');
+}
+mqDark.addEventListener('change',()=>{ if(S.theme==='auto') applyTheme(); });
+const FONTPACKS={ nur:'', classic:'EB+Garamond:wght@400;500&family=Inter:wght@300;400',
+  modern:'Inter:wght@200;300;400;500', scribe:'Amiri:wght@400;700' };
+function applyFont(){
+  document.documentElement.setAttribute('data-font',S.font);
+  const spec=FONTPACKS[S.font];
+  if(spec && !document.getElementById('fp-'+S.font)){
+    const l=document.createElement('link'); l.id='fp-'+S.font; l.rel='stylesheet';
+    l.href='https://fonts.googleapis.com/css2?family='+spec+'&display=swap';
+    document.head.appendChild(l);
+  }
+}
+function applySize(){
+  const m={s:'clamp(1.15rem, 2.5vw + .45rem, 1.85rem)',m:'clamp(1.42rem, 3.4vw + .55rem, 2.6rem)',
+           l:'clamp(1.7rem, 4.4vw + .6rem, 3.3rem)'};
+  document.documentElement.style.setProperty('--verse-size',m[S.size]);
+}
+
+/* ══ bags ══ */
+let verseBag=null, storyBag=new Bag(STORIES.map((_,i)=>i));
+function rebuildBag(){
+  if(S.pool==='all' && fullQuran) verseBag=new Bag(fullQuran.map((_,i)=>i));
+  else verseBag=new Bag(V.map((v,i)=>i).filter(i=>!S.mood || V[i][2].split(' ').indexOf(S.mood)>=0));
+}
+const textFor=(c,a,fb)=>{ const m=EDCACHE[S.edition]; const h=m&&m[(c-1)*1000+a]; return h||fb; };
+const indexEdition=arr=>{ const m={}; arr.forEach(v=>{m[(v.chapter-1)*1000+v.verse]=v.text.trim();}); return m; };
+
+/* ══ current item ══ */
+let CUR=null;
+function swap(build){
+  slab.classList.add('out');
+  setTimeout(()=>{ build(); slab.classList.remove('out'); slab.classList.add('in');
+    requestAnimationFrame(()=>requestAnimationFrame(()=>slab.classList.remove('in'))); },370);
+}
+function paintVerse(){
+  slab.classList.remove('story');
+  verseEl.className=(S.dir==='rtl'?'rtl ':'')+(S.edition.slice(0,3)==='ara'?'arabic':'');
+  verseEl.innerHTML=gloss(CUR.text);
+  refEl.innerHTML=`${esc(SURAHS[CUR.c-1])}<span class="sep">·</span>${CUR.c}:${CUR.a}`+
+    (isLiked(CUR.key)?'<span class="liked">♥</span>':'');
+  refEl.style.display=S.showRef==='on'?'':'none';
+}
+function showVerse(first){
+  let c,a,text,group;
+  if(S.pool==='all' && fullQuran){
+    const v=fullQuran[verseBag.next()];
+    c=v.chapter; a=v.verse; text=v.text.trim(); group=classify(text,c*31+a);
+  }else{
+    const row=V[verseBag.next()];
+    c=row[0]; a=row[1]; group=row[3]; text=textFor(c,a,row[4]);
+    if(S.edition!=='built-in') group=classify(text,c*31+a);
+  }
+  CUR={type:'verse',c,a,text,key:'v:'+c+':'+a};
+  setSceneIdx(S.sceneMode==='verse'?sceneForGroup(group,c*31+a):sceneForGroup('night',0));
+  if(first){ paintVerse(); slab.classList.add('in');
+    requestAnimationFrame(()=>requestAnimationFrame(()=>slab.classList.remove('in'))); }
+  else swap(paintVerse);
+}
+function paintStory(){
+  const st=CUR.story;
+  slab.classList.add('story');
+  verseEl.className=S.dir==='rtl'?'rtl':'';
+  verseEl.innerHTML=`<span class="story-title">${esc(st.t)}</span>${esc(st.b)}<span class="story-hold">${esc(st.h)}</span>`;
+  refEl.style.display='';
+  refEl.innerHTML=esc(st.r)+(isLiked(CUR.key)?'<span class="liked">♥</span>':'');
+}
+async function showStory(idx){
+  const i = (idx==null) ? storyBag.next() : idx;
+  const base=STORIES[i];
+  CUR={type:'story',i,story:base,key:'s:'+i};
+  setSceneIdx(S.sceneMode==='verse'?sceneForGroup(base.s,base.t.length):sceneForGroup('night',0));
+  swap(paintStory);
+  const tr=await translatedStory(i);
+  if(tr && CUR && CUR.type==='story' && CUR.i===i){ CUR.story=tr; paintStory(); }
+}
+const advance=()=>S.mode==='story'?showStory():showVerse(false);
+
+/* stories follow the chosen language when translation is available */
+async function translatedStory(i){
+  if(LANGNAME==='English') return null;
+  const bucket=STORYCACHE[LANGNAME]||(STORYCACHE[LANGNAME]={});
+  if(bucket[i]) return bucket[i];
+  if(aiWorks===false) return null;
+  const st=STORIES[i];
+  try{
+    const out=await ai(
+      'You translate short retellings of Qur\'anic accounts. Reply with JSON only: {"t":"","b":"","h":"","r":""}. '+
+      'Keep prophets\' names in the form used by Muslims writing in the target language. Do not add or remove meaning.',
+      'Translate into '+LANGNAME+':\n'+JSON.stringify({t:st.t,b:st.b,h:st.h,r:st.r}),1600);
+    const o=JSON.parse(unfence(out));
+    if(o&&o.b){ bucket[i]={t:o.t||st.t,b:o.b,h:o.h||st.h,r:o.r||st.r,s:st.s};
+      store.set('storycache',STORYCACHE); return bucket[i]; }
+  }catch(e){ aiWorks=aiWorks===true?true:false; }
+  return null;
+}
+
+/* ══ hearts ══ */
+const isLiked=k=>likes.some(l=>l.k===k);
+const heartfx=document.getElementById('heartfx');
+function toggleLike(){
+  if(!CUR) return;
+  const at=likes.findIndex(l=>l.k===CUR.key);
+  if(at>=0){ likes.splice(at,1); }
+  else{
+    likes.unshift(CUR.type==='verse'?{k:CUR.key,type:'verse',c:CUR.c,a:CUR.a}:{k:CUR.key,type:'story',i:CUR.i});
+    heartfx.classList.remove('beat'); void heartfx.offsetWidth; heartfx.classList.add('beat');
+    setTimeout(()=>heartfx.classList.remove('beat'),1150);
+  }
+  store.set('likes',likes);
+  CUR.type==='verse'?paintVerse():paintStory();
+  renderHearted();
+}
+function renderHearted(){
+  const box=document.getElementById('heartlist'); if(!box) return;
+  if(!likes.length){ box.innerHTML=`<p class="empty">${esc(t('hearted.empty'))}</p>`; return; }
+  box.innerHTML=`<div class="gtitle">${likes.length} ${esc(t('hearted.count'))}</div><div class="hlist">`+
+    likes.map((l,n)=>{
+      let body,ref;
+      if(l.type==='verse'){
+        const row=V.find(v=>v[0]===l.c&&v[1]===l.a);
+        body=textFor(l.c,l.a,row?row[4]:'');
+        ref=SURAHS[l.c-1]+' · '+l.c+':'+l.a;
+      }else{
+        const st=(STORYCACHE[LANGNAME]&&STORYCACHE[LANGNAME][l.i])||STORIES[l.i];
+        body=st.t; ref=st.r;
+      }
+      return `<div class="hitem"><button class="h-t" data-open-h="${n}" style="text-align:start">${esc(body).slice(0,240)}
+        <span class="h-r">${esc(ref)}</span></button><button class="h-x" data-del-h="${n}" aria-label="Remove">✕</button></div>`;
+    }).join('')+'</div>';
+}
+document.getElementById('heartlist').addEventListener('click',e=>{
+  const d=e.target.closest('[data-del-h]'), o=e.target.closest('[data-open-h]');
+  if(d){ likes.splice(+d.dataset.delH,1); store.set('likes',likes); renderHearted();
+         if(CUR) (CUR.type==='verse'?paintVerse():paintStory()); return; }
+  if(o){ const l=likes[+o.dataset.openH]; closePanels();
+    if(l.type==='story'){ S.mode='story'; setPill(t('pill.stories')); showStory(l.i); }
+    else{ const row=V.find(v=>v[0]===l.c&&v[1]===l.a);
+      CUR={type:'verse',c:l.c,a:l.a,text:textFor(l.c,l.a,row?row[4]:''),key:l.k};
+      setSceneIdx(sceneForGroup(row?row[3]:classify(CUR.text,l.c*31+l.a),l.c*31+l.a));
+      swap(paintVerse); } }
+});
+
+/* ══ sheets ══ */
+const sheet=document.getElementById('sheet'), sheetTitle=document.getElementById('sheet-title'),
+      sheetBody=document.getElementById('sheet-body');
+function openSheet(title,html){ sheetTitle.textContent=title; sheetBody.innerHTML=html; sheet.classList.add('on'); }
+function closeSheet(){ sheet.classList.remove('on'); }
+sheet.addEventListener('click',e=>{ if(e.target.closest('[data-sclose]')) closeSheet(); });
+
+async function explain(){
+  if(!CUR) return;
+  const isV=CUR.type==='verse';
+  const key=(isV?CUR.key:'s:'+CUR.i)+'|'+LANGNAME;
+  openSheet(t('sheet.explain'),`<p class="quiet">${esc(t('sheet.thinking'))}</p>`);
+  if(EXPCACHE[key]){ openSheet(t('sheet.explain'),EXPCACHE[key]); return; }
+  try{
+    const sys='You explain the Qur\'an to an ordinary Muslim reader in plain, warm language. '+
+      'Three short paragraphs, no headings, no lists. Say what the passage means, the situation it was revealed into or the '+
+      'account it belongs to if that helps, and one honest thought on living by it. Stay with mainstream, agreed understanding; '+
+      'never invent a narration, never give a fiqh ruling, and never claim more certainty than the scholars do. '+
+      'Write entirely in '+LANGNAME+'.';
+    const usr=isV
+      ? `Surah ${SURAHS[CUR.c-1]}, ${CUR.c}:${CUR.a}\n\n"${CUR.text}"`
+      : `A retelling of a Qur'anic account: ${CUR.story.t} (${CUR.story.r})\n\n${CUR.story.b}`;
+    const out=await ai(sys,usr,900);
+    const html=out.split(/\n{2,}/).map(p=>`<p>${esc(p)}</p>`).join('');
+    EXPCACHE[key]=html; openSheet(t('sheet.explain'),html);
+  }catch(e){
+    aiWorks=false;
+    openSheet(t('sheet.explain'),`<p class="quiet">${esc(t('sheet.aiOff'))}</p>`);
+  }
+}
+
+/* ══ mood in your own words ══ */
+const LOCALMOOD=[
+ ['lust',/lust|desire|porn|tempt|gaze|haram relationship|zina/i],['envy',/envy|jealous|compare|everyone else has/i],
+ ['pride',/proud|arrogan|better than|show off|ego/i],['greed',/greed|money hungry|never enough|hoard/i],
+ ['gossip',/gossip|backbit|talked about|rumou?r|slander/i],['grudge',/grudge|forgive|resent|can'?t let go/i],
+ ['lazy',/lazy|missed prayer|skip.*pray|salah|procrastinat/i],['doubt',/doubt|not sure if|questioning|faith is weak/i],
+ ['love',/marriage|spouse|wife|husband|in love|proposal/i],['parents',/mother|father|parents|mom|dad/i],
+ ['sick',/sick|ill|pain|hospital|diagnos|health/i],['money',/money|rent|bills|job|salary|poor|broke|debt/i],
+ ['wronged',/unfair|injustice|wronged|betray|cheated|oppress/i],['death',/died|death|passed away|funeral|grave|loss of/i],
+ ['newstart',/start over|new start|fresh|change my life|again/i],['guilty',/guilt|sin|ashamed|regret|forgive me/i],
+ ['heavy',/sad|grief|cry|crying|heartbroken|depress|empty/i],['anxious',/anxious|anxiety|worry|worried|stress|panic|overwhelm/i],
+ ['afraid',/afraid|scared|fear|terrified|nervous/i],['alone',/alone|lonely|no one|isolated|nobody/i],
+ ['angry',/angry|anger|furious|rage|mad at/i],['worn',/tired|exhausted|burnt out|drained|no energy/i],
+ ['lost',/lost|no direction|don'?t know what|confused|purpose/i],['grateful',/grateful|thankful|alhamdulillah|blessed/i],
+ ['hopeful',/hope|hopeful|looking forward|optimis/i],['wonder',/beautiful|amazed|wonder|awe|sky|creation/i],
+ ['peace',/calm|peace|content|settled|at ease/i]];
+function localMood(text){
+  for(const [k,re] of LOCALMOOD) if(re.test(text)) return k;
+  return 'anxious';
+}
+function openMoodSheet(){
+  openSheet(t('sheet.mood'),
+    `<textarea class="ta" id="moodtext" placeholder="${esc(t('mood.placeholder'))}"></textarea>
+     <button class="cta" id="moodgo">${esc(t('mood.detect'))}</button>
+     <p class="quiet" id="moodmsg" style="margin-top:14px"></p>`);
+  const ta=document.getElementById('moodtext'); ta.focus();
+  document.getElementById('moodgo').addEventListener('click',async()=>{
+    const text=ta.value.trim(); if(!text) return;
+    const msg=document.getElementById('moodmsg'); msg.textContent=t('mood.thinking');
+    document.getElementById('moodgo').setAttribute('disabled','');
+    let key=null;
+    try{
+      const out=await ai('You match a person\'s own words to one mood label. Reply with the label only, nothing else.',
+        'Labels: '+MOODS.map(m=>m[0]).join(', ')+'\n\nPerson wrote: "'+text+'"',20);
+      const c=out.toLowerCase().replace(/[^a-z]/g,'');
+      if(MOODS.some(m=>m[0]===c)) key=c;
+    }catch(e){ aiWorks=false; }
+    if(!key) key=localMood(text);
+    closeSheet(); pickMood(key);
+  });
+}
+
+/* ══ moods ══ */
+function moodName(k){ return tOpt('mn.'+k)||MOODS.find(m=>m[0]===k)[1]; }
+function buildMoodGrid(){
+  const grid=document.getElementById('moodgrid'); if(!grid) return;
+  const groups=[['feeling','mood.group.feeling'],['struggle','mood.group.struggle'],['life','mood.group.life']];
+  grid.innerHTML=groups.map(([g,label])=>
+    `<div class="gtitle">${esc(t(label))}</div><div class="moods">`+
+    MOODS.filter(m=>m[4]===g).map(([k,name,sub,col])=>{
+      const n=V.filter(v=>v[2].split(' ').indexOf(k)>=0).length;
+      return `<button class="mood" data-mood="${k}"><span class="m-d" style="background:${col};box-shadow:0 0 12px ${col}"></span>
+        <span class="m-n">${esc(tOpt('mn.'+k)||name)}</span><span class="m-s">${esc(tOpt('ms.'+k)||sub)}</span>
+        <span class="m-c">${n} ${esc(t('mood.count'))}</span></button>`;
+    }).join('')+'</div>').join('');
+}
+function pickMood(k){
+  S.mood=k; S.mode='verse'; S.pool='curated'; fullQuran=null;
+  rebuildBag(); setPill(moodName(k)); closePanels(); showVerse(false);
+}
+document.getElementById('moodgrid').addEventListener('click',e=>{
+  const b=e.target.closest('[data-mood]'); if(b) pickMood(b.dataset.mood);
+});
+document.getElementById('sharemood').addEventListener('click',openMoodSheet);
+
+/* ══ dot / bloom / panels ══ */
+const dot=document.getElementById('dot'), bloom=document.getElementById('bloom'),
+      scrim=document.getElementById('scrim'), pill=document.getElementById('pill'),
+      pillLabel=document.getElementById('pill-label');
+function setBloom(open){
+  bloom.classList.toggle('open',open); bloom.setAttribute('aria-hidden',String(!open));
+  scrim.classList.toggle('on',open); dot.setAttribute('aria-expanded',String(open));
+}
+dot.addEventListener('click',e=>{e.stopPropagation();setBloom(dot.getAttribute('aria-expanded')!=='true');});
+scrim.addEventListener('click',()=>setBloom(false));
+function openPanel(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  const p=document.getElementById('p-'+id); if(!p) return;
+  p.classList.add('on'); const b=p.querySelector('.back'); if(b) b.focus(); setBloom(false);
+}
+const closePanels=()=>document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closePanels));
+bloom.addEventListener('click',e=>{
+  const b=e.target.closest('[data-open]'); if(!b) return; e.stopPropagation();
+  const w=b.dataset.open;
+  if(w==='stories'){ S.mode='story'; setPill(t('pill.stories')); setBloom(false); showStory(); return; }
+  if(w==='language') buildLangs();
+  if(w==='hearted') renderHearted();
+  openPanel(w);
+});
+function setPill(l){ if(!l){pill.classList.remove('on');return;} pillLabel.textContent=l; pill.classList.add('on'); }
+document.getElementById('pill-clear').addEventListener('click',e=>{
+  e.stopPropagation(); S.mood=null; S.mode='verse'; S.pool='curated'; fullQuran=null;
+  setPill(null); rebuildBag(); showVerse(false);
+});
+
+/* ══ gestures: tap = next · double tap = heart · swipe up = explain ══ */
+let tapTimer=null, lastTap=0, tStartY=null, tStartX=null, tStartT=0, swiped=false;
+stage.addEventListener('touchstart',e=>{ const p=e.touches[0]; tStartY=p.clientY; tStartX=p.clientX; tStartT=Date.now(); swiped=false; },{passive:true});
+stage.addEventListener('touchend',e=>{
+  if(tStartY==null) return;
+  const p=e.changedTouches[0], dy=p.clientY-tStartY, dx=p.clientX-tStartX, dt=Date.now()-tStartT;
+  tStartY=null;
+  if(dy<-70 && Math.abs(dx)<60 && dt<700){ swiped=true; clearTimeout(tapTimer); tapTimer=null; explain(); }
+},{passive:true});
+stage.addEventListener('click',()=>{
+  if(swiped){ swiped=false; return; }
+  if(bloom.classList.contains('open')){ setBloom(false); return; }
+  const now=Date.now();
+  if(now-lastTap<300){ clearTimeout(tapTimer); tapTimer=null; lastTap=0; toggleLike(); return; }
+  lastTap=now;
+  tapTimer=setTimeout(()=>{ tapTimer=null; advance(); },250);
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){ closeSheet(); closePanels(); setBloom(false); }
+  if(document.querySelector('.panel.on')||sheet.classList.contains('on')) return;
+  if(e.key==='ArrowRight'||e.key===' ') { e.preventDefault(); advance(); }
+  if(e.key==='ArrowUp') explain();
+  if(e.key==='l'||e.key==='L') toggleLike();
+});
+
+/* ══ languages ══ */
+const langlist=document.getElementById('langlist'), langsearch=document.getElementById('langsearch'),
+      langnote=document.getElementById('langnote');
+let EDITIONS=null;
+async function buildLangs(){
+  if(EDITIONS){ renderLangs(langsearch.value.trim().toLowerCase()); return; }
+  langlist.innerHTML=`<div class="gtitle">${esc(t('lang.loading'))}</div>`;
+  try{ const j=await fetchJSON('editions.json');
+    EDITIONS=Object.values(j).filter(e=>e.name&&e.language); renderLangs(''); }
+  catch(e){ EDITIONS=null; langlist.innerHTML=`<div class="note">${esc(t('lang.offline'))}</div>`; }
+}
+function renderLangs(q){
+  if(!EDITIONS) return;
+  const groups=new Map();
+  EDITIONS.forEach(e=>{ const ln=e.language;
+    if(q && !(ln.toLowerCase().includes(q)||(e.author||'').toLowerCase().includes(q))) return;
+    if(!groups.has(ln)) groups.set(ln,[]); groups.get(ln).push(e); });
+  const keys=[...groups.keys()].sort((a,b)=>a==='English'?-1:b==='English'?1:a.localeCompare(b));
+  if(!keys.length){ langlist.innerHTML=`<div class="gtitle">${esc(t('lang.none'))}</div>`; return; }
+  langlist.innerHTML=`<button class="lang" data-id="built-in" data-lang="English" data-dir="ltr" ${S.edition==='built-in'?'aria-current="true"':''}>
+      <span class="l-n">English</span><span class="l-t">${esc(t('lang.builtin'))}</span></button>`+
+    keys.map(k=>`<div class="gtitle">${esc(k)}</div>`+groups.get(k).map(e=>
+      `<button class="lang" data-id="${esc(e.name)}" data-lang="${esc(k)}" data-dir="${e.direction||'ltr'}" ${e.name===S.edition?'aria-current="true"':''}>
+        <span class="l-n">${esc(k)}</span><span class="l-t">${esc(e.author||'')}</span></button>`).join('')).join('');
+}
+langsearch.addEventListener('input',()=>renderLangs(langsearch.value.trim().toLowerCase()));
+langlist.addEventListener('click',async e=>{
+  const b=e.target.closest('.lang'); if(!b) return;
+  const id=b.dataset.id, ln=b.dataset.lang||'English';
+  if(id==='built-in'){ S.edition='built-in'; S.dir='ltr'; fullQuran=null;
+    if(S.pool==='all'){S.pool='curated';} await setLanguage('English'); rebuildBag();
+    renderLangs(langsearch.value.trim().toLowerCase()); closePanels(); showVerse(false); return; }
+  if(!EDCACHE[id]){
+    const lab=b.querySelector('.l-t'), prev=lab.textContent; lab.textContent=t('lang.downloading');
+    try{ const j=await fetchJSON('editions/'+id+'.min.json');
+      EDCACHE[id]=indexEdition(j.quran); EDCACHE['_arr_'+id]=j.quran; lab.textContent=prev; }
+    catch(err){ lab.textContent=prev; langnote.innerHTML=`<b>${esc(t('lang.failed'))}</b>`; return; }
+  }
+  S.edition=id; S.dir=b.dataset.dir||'ltr';
+  fullQuran = S.pool==='all' ? EDCACHE['_arr_'+id] : null;
+  if(id.slice(0,3)==='ara' && !document.getElementById('fp-scribe')){
+    const l=document.createElement('link'); l.id='fp-scribe'; l.rel='stylesheet';
+    l.href='https://fonts.googleapis.com/css2?family=Amiri:wght@400&display=swap'; document.head.appendChild(l);
+  }
+  rebuildBag(); closePanels(); showVerse(false);
+  await setLanguage(ln);
+  renderLangs(langsearch.value.trim().toLowerCase());
+});
+
+/* translate the whole interface once per language, then keep it */
+async function setLanguage(name){
+  LANGNAME=name;
+  document.documentElement.setAttribute('lang',name==='English'?'en':'');
+  if(name==='English'){ UI={}; applyStrings(); return; }
+  if(UICACHE[name]){ UI=UICACHE[name]; applyStrings(); return; }
+  const payload={}; Object.keys(STR).forEach(k=>payload[k]=STR[k]);
+  MOODS.forEach(m=>{ payload['mn.'+m[0]]=m[1]; payload['ms.'+m[0]]=m[2]; });
+  try{
+    const out=await ai('You localise an interface. Reply with JSON only: the same keys, values translated. '+
+      'Keep it short and natural for the language, as an app would speak. Do not translate the keys.',
+      'Translate the values into '+name+':\n'+JSON.stringify(payload),4000);
+    const o=JSON.parse(unfence(out));
+    if(o && o['menu.mood']){ UI=o; UICACHE[name]=o; store.set('uicache',UICACHE); applyStrings(); }
+  }catch(e){ aiWorks=false; UI={}; applyStrings(); }
+}
+
+/* ══ settings, built here so every label can be translated ══ */
+function seg(id,opts,cur){
+  return `<div class="seg" id="${id}">`+opts.map(([v,l])=>
+    `<button data-v="${v}" aria-pressed="${v===cur}">${esc(l)}</button>`).join('')+'</div>';
+}
+function row(name,sub,control){
+  return `<div class="row"><div><div class="r-n">${esc(name)}</div><div class="r-s">${sub}</div></div>${control}</div>`;
+}
+function buildSettings(){
+  const box=document.getElementById('setbody'); if(!box) return;
+  const keySet=!!store.get('apikey');
+  box.innerHTML=
+    row(t('set.theme'),esc(t('set.themeSub')),seg('seg-theme',[['dark',t('set.dark')],['light',t('set.light')],['auto',t('set.auto')]],S.theme))+
+    row(t('set.font'),esc(t('set.fontSub')),seg('seg-font',[['nur','Nur'],['classic','Classic'],['modern','Modern'],['scribe','Scribe']],S.font))+
+    row(t('set.size'),esc(t('set.sizeSub')),seg('seg-size',[['s','S'],['m','M'],['l','L']],S.size))+
+    row(t('set.motion'),esc(t('set.motionSub')),seg('seg-motion',[['on',t('set.on')],['off',t('set.off')]],S.motion))+
+    row(t('set.scene'),esc(t('set.sceneSub')),seg('seg-scene',[['verse',t('set.fromVerse')],['night',t('set.night')]],S.sceneMode))+
+    row(t('set.ref'),esc(t('set.refSub')),seg('seg-ref',[['on',t('set.on')],['off',t('set.off')]],S.showRef))+
+    row(t('set.pool'),`<span id="poolnote">${esc(t('set.poolSub'))}</span>`,seg('seg-pool',[['curated',t('set.chosen')],['all',t('set.all')]],S.pool))+
+    `<div class="row" style="flex-direction:column;align-items:stretch;gap:12px">
+       <div><div class="r-n">${esc(t('set.ai'))}</div><div class="r-s">${esc(t('set.aiSub'))}</div></div>
+       <div style="display:flex;gap:10px;flex-wrap:wrap">
+         <input class="search" id="aikey" type="password" style="margin:0;flex:1 1 220px" placeholder="${esc(t('set.aiKey'))}" value="">
+         <button class="cta" id="aisave" style="margin:0">${esc(t('set.aiSave'))}</button>
+       </div>
+       <div class="r-s" id="aistate">${keySet?esc(t('set.aiOn')):esc(t('set.aiOff'))}</div>
+     </div>`+
+    row(t('set.gestures'),esc(t('set.gesturesSub')),'')+
+    `<div class="row"><div><div class="r-n">${esc(t('set.clear'))}</div><div class="r-s">${esc(t('set.clearSub'))}</div></div>
+       <button class="cta" id="clearlikes" style="margin:0">${esc(t('set.clearBtn'))}</button></div>`;
+  wire('seg-theme',v=>{S.theme=v;store.set('theme',v);applyTheme();});
+  wire('seg-font',v=>{S.font=v;store.set('font',v);applyFont();});
+  wire('seg-size',v=>{S.size=v;store.set('size',v);applySize();});
+  wire('seg-motion',v=>{S.motion=v;store.set('motion',v);motionOn=(v==='on');});
+  wire('seg-scene',v=>{S.sceneMode=v;store.set('sceneMode',v);if(v==='night')setSceneIdx(sceneForGroup('night',0));});
+  wire('seg-ref',v=>{S.showRef=v;store.set('showRef',v);refEl.style.display=(v==='on'&&refEl.innerHTML)?'':'none';});
+  wire('seg-pool',setPool);
+  document.getElementById('aisave').addEventListener('click',()=>{
+    const v=document.getElementById('aikey').value.trim();
+    if(v){ store.set('apikey',v); aiWorks=null; document.getElementById('aistate').textContent=t('set.aiOn'); }
+    else { store.del('apikey'); document.getElementById('aistate').textContent=t('set.aiOff'); }
+    document.getElementById('aikey').value='';
+  });
+  document.getElementById('clearlikes').addEventListener('click',()=>{
+    likes=[]; store.set('likes',likes); renderHearted(); if(CUR)(CUR.type==='verse'?paintVerse():paintStory());
+  });
+}
+function wire(id,fn){
+  const el=document.getElementById(id); if(!el) return;
+  el.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+    el.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+    fn(b.dataset.v); });
+}
+async function setPool(v){
+  const note=document.getElementById('poolnote');
+  if(v==='all'){
+    let src = S.edition==='built-in' ? EDCACHE['_arr_all'] : EDCACHE['_arr_'+S.edition];
+    if(!src){
+      note.textContent='…';
+      try{ const j=await fetchJSON('editions/eng-rowwadtranslati.min.json');
+        EDCACHE['_arr_all']=j.quran; src=j.quran; }
+      catch(e){ note.textContent=t('set.poolSub'); S.pool='curated';
+        wireBack('seg-pool','curated'); rebuildBag(); return; }
+    }
+    fullQuran=src; S.pool='all'; S.mood=null; setPill(t('pill.all')); rebuildBag();
+    note.textContent=t('set.poolSub'); showVerse(false);
+  }else{
+    S.pool='curated'; fullQuran=null; setPill(S.mood?moodName(S.mood):null); rebuildBag();
+  }
+}
+function wireBack(id,v){ const el=document.getElementById(id); if(el)
+  el.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===v))); }
+
+/* ══ about ══ */
+function buildAbout(){
+  const box=document.getElementById('aboutbody'); if(!box) return;
+  box.innerHTML=`
+  <p class="lede" style="max-width:52ch">Usama built this because of a small, ordinary problem: the Qur'an has an answer for almost every state a heart can be in, and almost nobody can find it in the moment they need it. When you are frightened at two in the morning, or ashamed of something you did, or so tired you cannot pray properly, you do not want to search. You want to be met. So he made a page with one verse on it, a dot in the corner, and nothing else in the way — no account, no feed, no counting of days. Open it, and something is already waiting for you. Tap, and something else comes. That is the whole idea, and he kept it that small on purpose.</p>
+
+  <div class="gtitle">Where the words come from</div>
+  <p class="foot" style="margin-top:0">The English is the <b>Rowwad Translation Center</b> edition, published for free distribution by quranenc.com, and it is written into this page — it works with no connection at all. Every other language is a published scholarly translation drawn from the open Qur'an dataset at <a href="https://github.com/fawazahmed0/quran-api" target="_blank" rel="noopener">github.com/fawazahmed0/quran-api</a>, which carries 490 translations across 98 languages, sourced from quranenc.com, tanzil.net and the King Fahd Complex. No verse here is machine-translated. The 377 chosen verses were read and tagged one by one; the stories are short retellings written to send you back to the surah itself, not to replace it. The explanations you can call up are generated, and generated things can be wrong — treat them as a starting point, and take anything that matters to a person of knowledge.</p>
+
+  <div class="gtitle">A word, for whoever is reading</div>
+  <p class="foot" style="margin-top:0">Do not let an app stand in for the Book. This is a doorway, and a narrow one — six lines on a screen. The Qur'an was given to be recited slowly, in Arabic if you can, sitting still, and returned to daily even when you feel nothing. Learn a little of the language; even ten words changes how a verse lands. Read a verse in its surah, not alone, because context is half the meaning. And when something here catches you, do not stop at the feeling — take it to a teacher, and act on one small thing before you look for the next verse. Consistency, however small, is loved more than intensity that burns out. Whatever good you find in this, it is from Allah; whatever error, from us, and we ask forgiveness for it.</p>
+
+  <div class="gtitle">Contact</div>
+  <p class="foot" style="margin-top:0">Corrections, mistakes in a translation, a mood that is missing, or an idea worth building — Usama would like to hear it.<br>
+  <a href="https://x.com/a1wai" target="_blank" rel="noopener" style="font-family:var(--f-display);font-size:1.2rem">@a1wai</a> on X</p>`;
+}
+
+/* ══ start ══ */
+applyTheme(); applyFont(); applySize();
+motionOn=(S.motion==='on');
+if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){ motionOn=false; S.motion='off'; }
+sizeCanvas();
+setSceneIdx(sceneForGroup('stars',0));
+rebuildBag();
+applyStrings();
+requestAnimationFrame(frame);
+showVerse(true);
+const hintEl=document.getElementById('hint');
+if(!store.get('seen')){ store.set('seen',1);
+  setTimeout(()=>hintEl.classList.add('on'),1400);
+  setTimeout(()=>hintEl.classList.remove('on'),9000); }
+
+</script>
+</body>
+</html>
