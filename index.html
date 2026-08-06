@@ -209,12 +209,22 @@ html[data-theme="light"] #scrim{background:rgba(247,244,237,.52)}
 .sheet .sbg{position:absolute;inset:0;background:rgba(2,4,10,.52);
   backdrop-filter:blur(20px) saturate(.82);-webkit-backdrop-filter:blur(20px) saturate(.82)}
 html[data-theme="light"] .sheet .sbg{background:rgba(247,244,237,.52)}
+.sheet .sbg{opacity:0;transition:opacity .42s var(--ease)}
+.sheet.on .sbg{opacity:1}
+.sheet.closing .sbg{opacity:0}
 .sheet .scard{position:relative;width:min(600px,100%);max-height:82vh;overflow-y:auto;
-  background:var(--panel);border:1px solid var(--line);border-radius:20px 20px 0 0;
-  padding:26px clamp(20px,5vw,32px) calc(30px + env(safe-area-inset-bottom));
-  animation:sheetIn .38s var(--ease) both;backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px)}
-@media(min-width:720px){.sheet{align-items:center}.sheet .scard{border-radius:20px}}
-@keyframes sheetIn{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+  background:var(--panel);border:1px solid var(--line);border-radius:22px 22px 0 0;
+  padding:14px clamp(20px,5vw,32px) calc(30px + env(safe-area-inset-bottom));
+  animation:sheetIn .44s var(--ease) both;backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  touch-action:pan-y}
+.sheet.closing .scard{animation:sheetOut .32s var(--ease) both}
+.sheet .scard.dragging{animation:none;transition:none}
+/* the handle you pull down on */
+.sheet .grip{display:block;width:44px;height:4px;border-radius:999px;background:var(--ink-faint);
+  opacity:.5;margin:0 auto 14px}
+@media(min-width:720px){.sheet{align-items:center}.sheet .scard{border-radius:22px}}
+@keyframes sheetIn{from{opacity:0;transform:translateY(46px)}to{opacity:1;transform:none}}
+@keyframes sheetOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(60px)}}
 .shead{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
 .shead h3{font-size:.66rem;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-dim);font-weight:400}
 .shead button{width:28px;height:28px;border-radius:50%;border:1px solid var(--line);color:var(--ink-faint);
@@ -227,6 +237,22 @@ html[data-theme="light"] .sheet .sbg{background:rgba(247,244,237,.52)}
   font-family:var(--f-ui);font-size:.7rem;letter-spacing:.04em;line-height:1.7;color:var(--ink-faint)}
 .sbody .sref{font-family:var(--f-ui);font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;
   color:var(--ink-faint);margin-bottom:14px}
+
+/* the small word that appears when you keep something */
+#toast{position:fixed;left:50%;bottom:calc(148px + env(safe-area-inset-bottom));transform:translate(-50%,8px);
+  z-index:10;pointer-events:none;opacity:0;
+  padding:9px 18px;border-radius:999px;border:1px solid var(--line);
+  background:rgba(6,9,18,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-dim);
+  white-space:nowrap;max-width:86vw;overflow:hidden;text-overflow:ellipsis}
+html[data-theme="light"] #toast{background:rgba(247,244,237,.82)}
+#toast.on{animation:toastPop 2.1s var(--ease) forwards}
+@keyframes toastPop{
+  0%{opacity:0;transform:translate(-50%,10px)}
+  14%{opacity:1;transform:translate(-50%,0)}
+  76%{opacity:1;transform:translate(-50%,0)}
+  100%{opacity:0;transform:translate(-50%,-6px)}
+}
 
 @keyframes breathe{0%,100%{opacity:.42}50%{opacity:1}}
 @media (max-width:600px){
@@ -270,16 +296,17 @@ html[data-theme="light"] .sheet .sbg{background:rgba(247,244,237,.52)}
   </svg>
 </div>
 
+<div id="toast" role="status" aria-live="polite"></div>
+
 <div id="scrim"></div>
 
 <nav id="bloom" aria-hidden="true">
   <button data-open="about" data-i18n="menu.about">About</button>
   <button data-open="settings" data-i18n="menu.settings">Settings</button>
   <button data-open="language" data-i18n="menu.language">Language</button>
-  <button data-open="hearted" data-i18n="menu.hearted">Hearted</button>
+  <button data-open="favorites" data-i18n="menu.favorites">Favorites</button>
   <button data-open="stories" data-i18n="menu.stories">Stories</button>
   <button data-open="mood" data-i18n="menu.mood">Mood</button>
-  <button data-open="explain" data-i18n="menu.explain">Explain</button>
 </nav>
 
 <div id="dotwrap"><button id="dot" aria-expanded="false" aria-controls="bloom" aria-label="Open menu"></button></div>
@@ -296,9 +323,9 @@ html[data-theme="light"] .sheet .sbg{background:rgba(247,244,237,.52)}
   </div></div>
 </section>
 
-<section class="panel" id="p-hearted">
-  <div class="phead"><button class="back" data-close aria-label="Back">←</button><h2 class="ptitle" data-i18n="menu.hearted">Hearted</h2></div>
-  <div class="pbody"><div class="pinner"><div id="heartlist"></div></div></div>
+<section class="panel" id="p-favorites">
+  <div class="phead"><button class="back" data-close aria-label="Back">←</button><h2 class="ptitle" data-i18n="menu.favorites">Favorites</h2></div>
+  <div class="pbody"><div class="pinner"><div id="favlist"></div></div></div>
 </section>
 
 <section class="panel" id="p-language">
@@ -324,6 +351,7 @@ html[data-theme="light"] .sheet .sbg{background:rgba(247,244,237,.52)}
 <div class="sheet" id="sheet">
   <div class="sbg" data-sclose></div>
   <div class="scard">
+    <span class="grip" aria-hidden="true"></span>
     <div class="shead"><h3 id="sheet-title"></h3><button data-sclose aria-label="Close">✕</button></div>
     <div class="sbody" id="sheet-body"></div>
   </div>
@@ -396,7 +424,195 @@ h:"They lost it the night they decided to keep it all."},
 
 {t:"Luqman's advice to his son",k:[31,17],r:"Surah Luqman · 31",s:"path",
 b:"A father, given wisdom, teaches his son while advising him. Do not put anything beside God, he says — that is a great wrong. Be good to your parents, who carried you in weakness upon weakness. Know that even the weight of a mustard seed, hidden inside a rock or lost in the heavens or in the earth, will be brought out. Establish prayer, tell people to what is right, bear patiently what comes. Do not turn your cheek away from people in scorn or walk the earth pleased with yourself. Be moderate in your pace, and lower your voice.",
-h:"Everything he told his son to do begins with how he holds himself."}
+h:"Everything he told his son to do begins with how he holds himself."},
+
+{t:"The mother of Musa",k:[28,7],r:"Surah Al-Qasas · 28",s:"river",
+b:"A woman gives birth in a year when the sons of her people are being killed. She is told something no mother is told: nurse him, and when you fear for him, put him in the river, and do not fear and do not grieve — We will return him to you. She lets the water take him. He is picked up by the household that is hunting him. His sister follows at a distance and offers to find a woman who will nurse him, and the woman she brings is his own mother.",
+h:"She was asked to let go of him first, and he came back by the same water."},
+
+{t:"The bush in the valley",k:[20,12],r:"Surah Ta-Ha · 20",s:"fire",
+b:"He is travelling with his family at night, lost and cold, when he sees a fire on the side of the mountain. He tells them to wait — perhaps he can bring back a burning branch, or find someone at it who knows the way. He goes towards it to get warmth and directions, and is met instead by his Lord, and told to take off his sandals, for he is in the sacred valley.",
+h:"He went looking for a coal to carry back and was given his whole life's work."},
+
+{t:"Musa and the magicians",k:[20,70],r:"Surah Ta-Ha · 20",s:"light",
+b:"On a day of festival, in front of everyone, the finest magicians in the kingdom throw down their ropes and staffs, and to the crowd's eyes the ground is crawling. Musa feels fear in himself, and is told: do not fear, you are the higher. He throws what is in his right hand and it swallows what they made. The magicians — the ones who knew exactly how the trick was done — fall down in prostration, and Pharaoh threatens them, and they answer that they do not prefer him over what has come to them.",
+h:"The people who understood it best were the first to believe it."},
+
+{t:"The calf of gold",k:[20,88],r:"Surah Ta-Ha · 20",s:"embers",
+b:"Musa goes to the appointment with his Lord and leaves his brother in charge for thirty nights, made complete with ten. In his absence the people melt down their ornaments and a calf is made for them — a body that makes a lowing sound — and they say this is your god and the god of Musa. Harun tells them they are only being tested, and to follow him, and they say they will not stop until Musa returns. He returns angry and grieving, and takes hold of his brother's head, and Harun says: the people overpowered me.",
+h:"It took forty days without him for them to build something that could not speak."},
+
+{t:"Musa asks to see his Lord",k:[7,143],r:"Surah Al-A'raf · 7",s:"quake",
+b:"At the appointed meeting he says: my Lord, show me Yourself, that I may look at You. He is told that he will not see Him — but to look at the mountain: if it stays in place, then he will see. His Lord appears to the mountain and it is levelled, and Musa falls unconscious. When he recovers he says: Glory be to You, I turn to You in repentance, and I am the first of the believers.",
+h:"The asking was not held against him. The answer was the mountain."},
+
+{t:"The well of Madyan",k:[28,24],r:"Surah Al-Qasas · 28",s:"well",
+b:"He arrives in a strange town with nothing, a wanted man, and finds a crowd of shepherds watering their flocks and two women holding theirs back, waiting for the men to leave. He waters their animals for them, asks for nothing, and turns to the shade and says: my Lord, I am in need of whatever good You send me. One of the women comes back, walking shyly, to say her father is asking for him — and there he is given work, and a home, and a wife.",
+h:"He prayed as a stranger with nothing, and the answer was already walking towards him."},
+
+{t:"The cow they kept asking about",k:[2,67],r:"Surah Al-Baqarah · 2",s:"cattle",
+b:"A man is killed and no one will say who did it. Musa tells his people that Allah commands them to slaughter a cow. They ask if he is mocking them. Then they ask what kind of cow, and are told — then its colour, and are told — then more, saying all cows look alike to us, and each time the description narrows until only one animal in the land will do. They slaughter it, and they had almost not done it.",
+h:"A single word would have been enough. They made it hard by asking."},
+
+{t:"Talut and the river",k:[2,249],r:"Surah Al-Baqarah · 2",s:"river",
+b:"An army marches out and its commander tells them plainly: Allah will test you with a river — whoever drinks from it is not with me, except one who takes a handful. They drink from it, except a few. Then the few who crossed look at the size of what is in front of them and say they have no power against Jalut and his soldiers today. And those who were certain they would meet their Lord say: how many a small company has overcome a large company by the permission of Allah.",
+h:"The river sorted them out long before the enemy did."},
+
+{t:"Dawud and the two men",k:[38,24],r:"Surah Sad · 38",s:"arch",
+b:"Two men climb the wall into his private chamber, and he is startled. They say: do not be afraid, we are two disputants, one of us has wronged the other, so judge between us. One has ninety-nine ewes, the other has one, and the first has demanded it from him. Dawud gives judgement at once — he has wronged you by asking. Then he realises he has been tested, and asks his Lord for forgiveness, and falls down bowing, and turns in repentance.",
+h:"He judged rightly, and still went down in repentance for how fast he judged."},
+
+{t:"The mountains that sang with him",k:[34,10],r:"Surah Saba · 34",s:"mountains",
+b:"Dawud is given a favour from his Lord: mountains, repeat the praise with him — and the birds too. Iron is made soft for him, and he is taught to make full coats of mail and to measure the links well. A king with a workshop, whose praise the hills answered.",
+h:"He was given a kingdom and told to keep working with his hands."},
+
+{t:"The wind at Sulayman's command",k:[34,12],r:"Surah Saba · 34",s:"wind",
+b:"For Sulayman the wind is made subject — a month's journey in a morning, and a month's journey in an evening. A spring of molten copper is made to flow for him, and there are jinn working in front of him by the permission of his Lord. Everything that a person could want power over, he is given, and told that this is a favour, to see whether he will be grateful.",
+h:"The wind itself was under him, and the test was still whether he would say thank you."},
+
+{t:"How Sulayman was found to have died",k:[34,14],r:"Surah Saba · 34",s:"arch",
+b:"He dies leaning on his staff, and nothing tells the jinn labouring under him that he has gone. They keep working, believing he is watching. Then a creature of the earth eats through the staff, and he falls, and it becomes clear to them that if they had known the unseen they would not have stayed in that humiliating labour.",
+h:"They were kept working by a man who was no longer there. Only the truth freed them."},
+
+{t:"Zakariyya in the chamber",k:[19,4],r:"Surah Maryam · 19",s:"arch",
+b:"An old man prays where no one can hear him. He says: my bones have weakened, my head is aflame with grey, and I have never been unblessed in my prayer to You. He is afraid of what comes after him, and his wife has always been barren, so he asks for an heir from his Lord. He is answered with a name no one had carried before him, and told that this is easy for the One who made him when he was nothing.",
+h:"He was old, and he still asked for the thing he wanted most."},
+
+{t:"Yahya, given the Book as a boy",k:[19,12],r:"Surah Maryam · 19",s:"pen",
+b:"The child is told: take the Book with strength. He is given sound judgement while still a boy, and tenderness from his Lord, and purity, and he is described in one line as dutiful to his parents, and not overbearing or disobedient. Peace be upon him the day he was born, the day he dies, and the day he is raised alive.",
+h:"He was a boy who was already carrying something with both hands."},
+
+{t:"Isa speaks in the cradle",k:[19,30],r:"Surah Maryam · 19",s:"light",
+b:"Maryam comes back to her people carrying him, and they say something terrible has been brought. She does not argue. She points at the baby. They say: how can we speak to one who is a child in the cradle? And he says: I am the servant of Allah. He has given me the Book and made me a prophet, and made me blessed wherever I am, and told me to pray and to give while I live, and to be good to my mother.",
+h:"Her defence was not her words. It was him."},
+
+{t:"The table sent down",k:[5,114],r:"Surah Al-Ma'idah · 5",s:"clouds",
+b:"The disciples ask Isa whether his Lord is able to send down a table spread with food from the sky. He tells them to be mindful of Allah if they are believers. They say they only want to eat from it and have their hearts reassured and know he has told them the truth. So he asks: our Lord, send down to us a table from the sky, that it may be a festival for the first of us and the last of us, and a sign from You.",
+h:"They asked for a sign, and were warned about what asking for one costs."},
+
+{t:"Ibrahim and the four birds",k:[2,260],r:"Surah Al-Baqarah · 2",s:"birds",
+b:"He says: my Lord, show me how You give life to the dead. He is asked: do you not believe? He says he does — but so that his heart may be at rest. So he is told to take four birds and make them incline to him, then to place a portion of them on each hill, and then to call them. They come to him in haste.",
+h:"He already believed. He was still allowed to ask to see it."},
+
+{t:"The one who argued about his Lord",k:[2,258],r:"Surah Al-Baqarah · 2",s:"sun",
+b:"A man given a kingdom argues with Ibrahim about who his Lord is. Ibrahim says: my Lord is the One who gives life and causes death. The man says he too gives life and causes death — he spares one prisoner and kills another. So Ibrahim says: then Allah brings the sun from the east, so bring it from the west. And the one who disbelieved was dumbfounded.",
+h:"The argument ended the moment it was moved outside a man's own reach."},
+
+{t:"Raising the foundations of the House",k:[2,127],r:"Surah Al-Baqarah · 2",s:"arch",
+b:"An old man and his son build with stone in an empty valley. As the walls rise they say: our Lord, accept this from us, You are the Hearing, the Knowing. They ask to be made submissive to Him, and for a nation from their offspring the same, and to be shown their rites, and for a messenger to be raised from among them. Two people building, and praying that it be accepted while they are still building it.",
+h:"They did the work and asked for it to be accepted in the same breath."},
+
+{t:"The dream of the sacrifice",k:[37,102],r:"Surah As-Saffat · 37",s:"dunes",
+b:"He tells his son what he has seen in a dream — that he is sacrificing him — and asks what he thinks. The boy says: father, do what you are commanded; you will find me, if Allah wills, of the patient. They both submit, and he lays him down on his forehead, and he is called: you have fulfilled the vision. A great sacrifice is put in the boy's place.",
+h:"It was over the moment they both said yes. The knife was never the point."},
+
+{t:"The man who passed a ruined town",k:[2,259],r:"Surah Al-Baqarah · 2",s:"ruins",
+b:"He passes a town fallen in on its roofs and says: how will Allah bring this to life after its death? So Allah causes him to die for a hundred years, then raises him and asks how long he stayed. He says a day, or part of a day. He is told: a hundred years — and to look at his food and drink, which have not spoiled, and at his donkey, which has not. And to look at the bones, how they are put together and covered with flesh. Then he says: I know that Allah is able to do all things.",
+h:"He asked a question about a town and was answered with his own hundred years."},
+
+{t:"The two sons of Adam",k:[5,31],r:"Surah Al-Ma'idah · 5",s:"birds",
+b:"Two brothers each offer something. One offering is accepted and the other is not, and the one refused says: I will surely kill you. His brother answers that Allah accepts from the mindful, and that if you raise your hand against me, I will not raise mine against you. He kills him anyway, and then stands there not knowing what to do with his brother's body — until a crow scratches in the ground to show him how to bury it, and he says: am I unable to be even like this crow?",
+h:"The first murder, and the first shame, and a bird had to teach him what to do next."},
+
+{t:"The son who would not board",k:[11,43],r:"Surah Hud · 11",s:"sea",
+b:"The water is rising and the ship is moving in waves like mountains. Nuh calls out to his son, standing apart: come with us, and do not be with the disbelievers. The boy says he will take himself to a mountain that will protect him from the water. His father says there is no protector today except the One who has mercy — and a wave comes between them.",
+h:"He was told there was no high ground left, and he still went looking for one."},
+
+{t:"The cloud that 'Ad were glad to see",k:[46,24],r:"Surah Al-Ahqaf · 46",s:"whirlwind",
+b:"A people of great strength are warned and answer that no one is stronger than they are. Then they see a cloud coming towards their valleys, and they say: this is a cloud that will bring us rain. They are told: no — it is what you asked to be hurried, a wind in which is a painful punishment, destroying everything by the command of its Lord. In the morning nothing could be seen but their dwellings.",
+h:"They looked at what was coming for them and called it a blessing."},
+
+{t:"Salih and the she-camel",k:[7,73],r:"Surah Al-A'raf · 7",s:"quake",
+b:"He tells his people that this she-camel is a sign for them — leave her to eat in the land of Allah, and do not touch her with harm. She has her day to drink and they have theirs. They hamstring her, and then say to him: bring us what you promise us, if you are of the messengers. The earthquake seized them, and in the morning they lay lifeless in their homes.",
+h:"They were given one animal to leave alone, and could not leave her alone."},
+
+{t:"Shu'ayb and the measure",k:[11,85],r:"Surah Hud · 11",s:"balance",
+b:"He tells his people to give full measure and weight in justice, and not to short-change people in their things, and not to go about the earth spreading corruption. They ask him whether his prayer is telling him that they should leave what their fathers worshipped, or stop doing what they like with their own wealth. He says he only wants to set things right as much as he can, and that his success is only with Allah.",
+h:"He was preaching about scales, and they heard it as an attack on their money."},
+
+{t:"Lut and the last night",k:[11,81],r:"Surah Hud · 11",s:"dawn",
+b:"Guests come to him and he is distressed for them, because he knows his people and what they rush to do. They surround the house. He offers them anything else and asks whether there is not one right-minded man among them. Then his guests tell him who they are — messengers who will not be reached — and to travel with his family in a part of the night, and not to look back, and that their appointed time is the morning. Is the morning not near?",
+h:"He was told the worst night he had ever had was almost over."},
+
+{t:"Yusuf and the locked doors",k:[12,33],r:"Surah Yusuf · 12",s:"gate",
+b:"The woman of the house he serves in bolts the doors and calls him to herself. He says: I seek the refuge of Allah. The doors are locked, no one would know, and the danger of refusing is real — she says plainly that if he does not do what she orders, he will be imprisoned and humiliated. And he says: prison is dearer to me than what they call me to.",
+h:"He did not say it was impossible. He said prison was the better of the two."},
+
+{t:"Two dreams in a prison",k:[12,39],r:"Surah Yusuf · 12",s:"lampnight",
+b:"Two young men come to him with dreams to be read — one sees himself pressing wine, the other carrying bread on his head that birds eat from. Before he answers either of them, he says: my two companions of the prison, are separate lords better, or Allah, the One, the Prevailing? Then he tells them what their dreams mean, and asks the one who will be saved to mention him to his master. The man forgets, and Yusuf stays there several more years.",
+h:"He preached in a prison to two men, one of whom was about to die."},
+
+{t:"Seven fat cows and seven lean",k:[12,47],r:"Surah Yusuf · 12",s:"wheat",
+b:"A king dreams of seven fat cows eaten by seven lean ones, and seven green ears and seven dry, and no one in his court can read it. The man who was released from prison finally remembers Yusuf, and goes to him. Yusuf reads it without asking for anything: sow for seven years as usual, and leave what you harvest in its ear except a little that you eat; then seven hard years will eat what you stored for them; then a year in which people will be given rain, and will press.",
+h:"Seven good years were given to him as a warning, not as a reward."},
+
+{t:"Ya'qub's eyes",k:[12,84],r:"Surah Yusuf · 12",s:"dusk",
+b:"He turns away from them and says: my grief is for Yusuf. His eyes go white from sorrow, and he holds it in. They tell him he will not stop remembering Yusuf until he is ruined, and he answers that he only complains of his sorrow and grief to Allah, and that he knows from Allah what they do not know. Then he sends them back to look — and tells them not to despair of the mercy of Allah.",
+h:"He wept for years and never once said it out loud to anyone but God."},
+
+{t:"The man with two gardens",k:[18,39],r:"Surah Al-Kahf · 18",s:"vines",
+b:"One man has two gardens of vines with palms around them and a stream running through, and both give their fruit without failing in anything. He says to his companion: I have more wealth than you and more men. And he goes into his garden wronging himself and says he does not think this will ever perish. His companion says: why, when you entered your garden, did you not say — what Allah wills; there is no power except with Allah. In the morning he is turning his hands over in regret at what he spent on it.",
+h:"He had everything, and the one sentence he would not say was the one that would have kept it."},
+
+{t:"Dhul-Qarnayn and the barrier",k:[18,96],r:"Surah Al-Kahf · 18",s:"embers",
+b:"A people caught between two mountains, harassed by those on the other side, offer him payment to build a wall. He says what his Lord has established him in is better, so help me with strength instead. He asks for sheets of iron until the gap is level, tells them to blow until it is fire, and pours molten copper over it. Then he says: this is a mercy from my Lord — and when the promise of my Lord comes, He will make it level with the ground.",
+h:"He built it and said in the same breath that it would not last forever."},
+
+{t:"Qarun and what he was given",k:[28,81],r:"Surah Al-Qasas · 28",s:"ruins",
+b:"A man of Musa's own people is given treasure whose keys alone weighed down a group of strong men. He is told not to rejoice arrogantly, and to seek the home of the hereafter with what he has been given without forgetting his share of the world. He says: I was only given it because of knowledge I have. He goes out before his people in his finery, and those who want the life of this world wish they were him. Then the earth swallowed him and his home.",
+h:"By the next morning the people who envied him were saying: it could have been us."},
+
+{t:"The believer who hid his faith",k:[40,28],r:"Surah Ghafir · 40",s:"veil",
+b:"A man from Pharaoh's own family, who had kept his faith hidden, speaks up while they are deciding to kill Musa: are you going to kill a man for saying my Lord is Allah, when he has brought you clear proofs? If he is lying, his lie is on him; if he is truthful, some of what he threatens will strike you. He keeps arguing, alone in that room, and at the end entrusts his affair to Allah.",
+h:"He had hidden it for years, and spoke on the day it cost the most."},
+
+{t:"The man who came running",k:[36,20],r:"Surah Ya-Sin · 36",s:"path",
+b:"Messengers come to a town and are called liars and threatened with stoning. Then from the farthest end of the city a man comes running and says: my people, follow the messengers — follow those who ask you for no payment and are rightly guided. He asks why he should not worship the One who created him. They kill him for it, and it is said to him: enter the Garden. He says: if only my people knew how my Lord has forgiven me.",
+h:"The last thought of a man they killed was that he wished they could see this."},
+
+{t:"The people of the ditch",k:[85,4],r:"Surah Al-Buruj · 85",s:"fire",
+b:"A trench is dug and filled with fuel and set alight, and people are thrown into it for one reason: that they believed in Allah, the Almighty, the Praiseworthy. Those who did it sat at the edge and watched what they were doing to the believers. The account is told in a few lines, and it ends not with the fire but with a verdict against the ones who lit it.",
+h:"The Qur'an remembers the burned, and names what was done to them, forever."},
+
+{t:"The night journey",k:[17,1],r:"Surah Al-Isra · 17",s:"nightpath",
+b:"Glory be to the One who took His servant by night from the Sacred Mosque to the Farthest Mosque, whose surroundings He has blessed, to show him some of His signs. One sentence, at the start of a surah, for a journey no one who heard about it the next morning could believe — and the surah then turns immediately to how to treat your parents, and orphans, and what you say, and how you walk.",
+h:"He was taken through the heavens and came back with instructions about ordinary days."},
+
+{t:"Two in the cave",k:[9,40],r:"Surah At-Tawbah · 9",s:"cave",
+b:"They are being hunted, two men in a cave, and the search has reached the mouth of it. His companion is afraid. He says to him: do not grieve — indeed Allah is with us. So Allah sent down His tranquillity upon him and supported him with soldiers no one could see.",
+h:"There was nowhere left to go, and the sentence he chose was: do not grieve."},
+
+{t:"The day of the trench",k:[33,10],r:"Surah Al-Ahzab · 33",s:"wind",
+b:"Armies come at them from above and below, until eyes turn aside and hearts reach the throats, and people are thinking all kinds of thoughts about Allah. There the believers were tested and shaken with a severe shaking. Then a wind is sent against the gathered armies, and soldiers no one could see, and they are turned back having gained nothing.",
+h:"The Qur'an says outright how frightened they were, and then what came."},
+
+{t:"The truce that was called a victory",k:[48,1],r:"Surah Al-Fath · 48",s:"path",
+b:"They set out for the Sacred House and are stopped short of it, and agree to terms that felt to many of them like a defeat — go home this year, come back the next, and send back anyone who comes to you from them. On the way back the words come down: indeed We have given you a clear victory. What looked like the worst day was the opening.",
+h:"It was named a victory before anyone could see how it would turn out."},
+
+{t:"The lie that was answered from above",k:[24,11],r:"Surah An-Nur · 24",s:"veil",
+b:"A rumour is spread about the household of the Prophet, and the town carries it in its mouths for a month, and every one who passed it on had a share in it. The verses come down: do not think it is bad for you — it is good for you. Why, when you heard it, did the believing men and women not think well of their own people, and say: this is a clear lie? And a warning to anyone who takes it lightly: you thought it a small thing, and with Allah it is enormous.",
+h:"The Qur'an stopped to deal with a piece of gossip, and called it enormous."},
+
+{t:"He frowned",k:[80,1],r:"Surah 'Abasa · 80",s:"shadows",
+b:"A blind man comes asking to be taught, while the Prophet is busy speaking to the chiefs of his people, hoping they will listen. He frowns and turns away — and a whole surah opens by correcting it: he frowned and turned away, because the blind man came to him. What would make you know? Perhaps he would be purified. As for the one who thinks himself in no need of you — to him you give attention.",
+h:"The correction was written down and recited forever, over one man who was overlooked."},
+
+{t:"Iram of the pillars",k:[89,7],r:"Surah Al-Fajr · 89",s:"ruins",
+b:"Have you not seen how your Lord dealt with 'Ad — Iram, of the lofty pillars, the like of which had never been built in the land? And Thamud, who carved the rocks in the valley? And Pharaoh, of the stakes? All of them transgressed in the land and increased corruption in it, so your Lord poured down on them a scourge of punishment. Three civilisations named in six lines, each of them sure it was permanent.",
+h:"Everything they built to last is a question in a surah now."},
+
+{t:"The town by the sea",k:[7,163],r:"Surah Al-A'raf · 7",s:"sea",
+b:"Ask them about the town that was by the sea, when they broke the Sabbath — when their fish came to them on the day they were told to rest, plainly at the surface, and did not come on the days they did not rest. Some of them found a way around the rule while keeping the words of it. And some of the town spoke against it, and some said: why bother warning people God is going to punish anyway? And they answered: so that we have an excuse before your Lord.",
+h:"The ones who kept speaking said they did it so they could face God, not to win."},
+
+{t:"Twelve springs from a stone",k:[2,60],r:"Surah Al-Baqarah · 2",s:"spring",
+b:"Musa asks for water for his people and is told to strike the stone with his staff, and twelve springs burst from it — each tribe knowing its own drinking place. Eat and drink from the provision of Allah, they are told, and do not go about the earth spreading corruption. And a little later the same people are asking for onions and lentils instead of what they were given.",
+h:"Water came out of a rock for them, and within a page they were complaining about the menu."},
+
+{t:"The dam at Saba",k:[34,16],r:"Surah Saba · 34",s:"orchard",
+b:"A people are given two gardens, on the right and on the left, and told: eat from the provision of your Lord and be grateful to Him — a good land, and a forgiving Lord. They turn away, so the flood of the dam is sent against them, and their two gardens are exchanged for two gardens of bitter fruit and tamarisk and a few thorny trees. That is how they were repaid for their ingratitude.",
+h:"Nothing was taken from them until they stopped noticing they had been given it."}
 ];
 /* ══════════════════════════════════════════════════════════
    SCENE ENGINE
@@ -426,44 +642,111 @@ const PAL={
  ice:['#071522','#17415f','#04090f','#8fd8ff'],
  lilac:['#140f26','#3a3070','#08060f','#c9bcff'],
  wine:['#1c0812','#55152c','#0b040a','#ff9bb0'],
- ember:['#180806','#5c1e0e','#0a0403','#ff8a4a']
+ ember:['#180806','#5c1e0e','#0a0403','#ff8a4a'],
+ ink:['#050912','#101d3a','#02040a','#7fa8ff'],
+ blaze:['#1a0602','#7a2a08','#0b0301','#ff7a3a'],
+ coal:['#0a0a0c','#26262c','#050506','#c2c6d0'],
+ sepia:['#170f08','#5a4126','#0a0704','#e6c79a'],
+ jade:['#03170f','#0f4a35','#020b07','#66e0b0'],
+ aqua:['#04141e','#0e4a63','#020a0f','#7fe3ff'],
+ violet:['#0f0620','#3c1470','#070310','#b98aff'],
+ rose:['#1d0a14','#6b2440','#0d0509','#ff9fc0'],
+ saffron:['#1b1206','#7d5a10','#0c0803','#ffd166'],
+ steel:['#080c12','#2e3f52','#04060a','#9fc3e8'],
+ dusk:['#140d1c','#4a2f52','#08050b','#ffb4d0'],
+ pearl:['#0a1016','#33465c','#05080b','#dfe8f5'],
+ iron:['#0c0d10','#3a3f47','#060708','#cdd4dc']
 };
 
-/* group -> { L: layers, P: palettes }  (each pairing is one scene) */
+/* ══════════════════════════════════════════════════════════
+   group -> { L: layers, P: palettes }.  Every group/palette
+   pairing is one scene, so 66 groups across 2–3 palettes each
+   give the page over 130 distinct scenes — a verse can be met
+   with a different sky for a long time before anything repeats.
+   ══════════════════════════════════════════════════════════ */
 const GROUPS={
- stars:{L:['stars','horizon'],P:['night','void']},
- night:{L:['stars','mist','horizon'],P:['indigo','void']},
- moon:{L:['stars','moon','ridgesFar'],P:['night','slate']},
- sun:{L:['sunDisc','rays','horizon'],P:['gold','amber']},
- dawn:{L:['dawnGlow','cloudBars','horizon'],P:['dawnrose','amber']},
- light:{L:['rays','glow'],P:['lilac','gold']},
- lamp:{L:['lampNiche','glow'],P:['amber','plum']},
- clouds:{L:['clouds','horizon'],P:['slate','ash']},
- lightning:{L:['stormClouds','bolt'],P:['storm','ash']},
- rain:{L:['rain','ripples','horizon'],P:['slate','ice']},
- mist:{L:['mist','ridgesFar','stars'],P:['ash','ice']},
- sea:{L:['waves'],P:['deepsea','teal']},
- twoseas:{L:['twoWaves'],P:['teal','mint']},
- ship:{L:['waves','ship'],P:['deepsea','night']},
- river:{L:['banks','river'],P:['mint','forest']},
- spring:{L:['spring','ripples'],P:['mint','ice']},
- mountains:{L:['ridges','stars'],P:['slate','plum']},
- peaks:{L:['peaks','mist'],P:['ice','storm']},
- hills:{L:['hills','clouds'],P:['moss','ash']},
- dunes:{L:['dunes','sunDisc'],P:['sand','copper']},
- sandwind:{L:['dunes','windStreaks'],P:['copper','gold']},
- cave:{L:['cave','stars'],P:['void','ash']},
- garden:{L:['hills','tree','blossom'],P:['forest','moss']},
- palms:{L:['dunes','palms'],P:['amber','sand']},
- olive:{L:['hills','tree'],P:['olive','moss']},
- wheat:{L:['wheat','horizon'],P:['gold','olive']},
- sprout:{L:['soil','sprout'],P:['moss','forest']},
- birds:{L:['clouds','birds'],P:['dawnrose','ice']},
- bees:{L:['grass','bees'],P:['gold','moss']},
- ants:{L:['soil','ants'],P:['sand','olive']},
- cattle:{L:['hills','cattle'],P:['olive','sand']},
- path:{L:['ridgesFar','path'],P:['plum','sand']},
- dew:{L:['grass','dew'],P:['mint','forest']}
+ stars:{L:['stars','horizon'],P:['night','void','ink']},
+ night:{L:['stars','mist','horizon'],P:['indigo','void','steel']},
+ moon:{L:['stars','moon','ridgesFar'],P:['night','slate','pearl']},
+ crescent:{L:['stars','crescent','ridgesFar'],P:['indigo','violet','ink']},
+ splitmoon:{L:['stars','splitmoon'],P:['void','violet']},
+ orbit:{L:['stars','orbit'],P:['ink','violet','night']},
+ meteors:{L:['stars','meteors','ridgesFar'],P:['void','indigo','ink']},
+ aurora:{L:['stars','aurora','ridgesFar'],P:['jade','ice','violet']},
+ sun:{L:['sunDisc','rays','horizon'],P:['gold','amber','saffron']},
+ dawn:{L:['dawnGlow','cloudBars','horizon'],P:['dawnrose','amber','rose']},
+ dusk:{L:['dawnGlow','ridgesFar','stars'],P:['dusk','wine','plum']},
+ eclipse:{L:['eclipse','stars'],P:['coal','ember','void']},
+ light:{L:['rays','glow'],P:['lilac','gold','pearl']},
+ lamp:{L:['lampNiche','glow'],P:['amber','plum','saffron']},
+ lampnight:{L:['stars','lampNiche'],P:['indigo','sepia']},
+ veil:{L:['veil','glow'],P:['pearl','lilac','dusk']},
+ arch:{L:['arch','stars'],P:['sepia','plum','saffron']},
+ gate:{L:['gate','glow'],P:['gold','violet','pearl']},
+ ascent:{L:['steps','stars'],P:['lilac','ice','violet']},
+ clouds:{L:['clouds','horizon'],P:['slate','ash','pearl']},
+ lightning:{L:['stormClouds','bolt'],P:['storm','ash','coal']},
+ thunderrain:{L:['stormClouds','rain','bolt'],P:['storm','steel','coal']},
+ rain:{L:['rain','ripples','horizon'],P:['slate','ice','aqua']},
+ hail:{L:['stormClouds','hail','horizon'],P:['ice','steel','pearl']},
+ mist:{L:['mist','ridgesFar','stars'],P:['ash','ice','pearl']},
+ wind:{L:['windStreaks','clouds','horizon'],P:['ash','steel']},
+ whirlwind:{L:['whirlwind','dunes'],P:['copper','sand','coal']},
+ dust:{L:['dust','glow'],P:['sepia','ash','pearl']},
+ smoke:{L:['smoke','horizon'],P:['coal','ash','ember']},
+ fire:{L:['fire','embers'],P:['blaze','ember','copper']},
+ embers:{L:['embers','horizon'],P:['ember','blaze','coal']},
+ sea:{L:['waves'],P:['deepsea','teal','aqua']},
+ seanight:{L:['stars','waves'],P:['void','deepsea','ink']},
+ seamoon:{L:['moon','waves'],P:['night','deepsea','pearl']},
+ windsea:{L:['waves','windStreaks'],P:['steel','deepsea']},
+ twoseas:{L:['twoWaves'],P:['teal','mint','aqua']},
+ abyss:{L:['abyss'],P:['void','deepsea','ink']},
+ pearls:{L:['abyss','pearls'],P:['deepsea','pearl','aqua']},
+ whale:{L:['abyss','whale'],P:['void','deepsea']},
+ ship:{L:['waves','ship'],P:['deepsea','night','steel']},
+ river:{L:['banks','river'],P:['mint','forest','jade']},
+ riverbank:{L:['banks','river','palms'],P:['jade','forest']},
+ spring:{L:['spring','ripples'],P:['mint','ice','aqua']},
+ well:{L:['wellmouth','stars'],P:['sepia','void','ink']},
+ mountains:{L:['ridges','stars'],P:['slate','plum','ink']},
+ peaks:{L:['peaks','mist'],P:['ice','storm','pearl']},
+ ridgemist:{L:['ridges','mist'],P:['ash','steel','pearl']},
+ quake:{L:['quake','stars'],P:['coal','iron','storm']},
+ hills:{L:['hills','clouds'],P:['moss','ash','jade']},
+ meadow:{L:['grass','dew','hills'],P:['mint','moss','jade']},
+ dunes:{L:['dunes','sunDisc'],P:['sand','copper','saffron']},
+ sandwind:{L:['dunes','windStreaks'],P:['copper','gold','sepia']},
+ mirage:{L:['dunes','mirage'],P:['sand','saffron','sepia']},
+ caravan:{L:['dunes','caravan'],P:['sepia','sand','copper']},
+ oasis:{L:['dunes','palms','spring'],P:['amber','jade','sand']},
+ ruins:{L:['ruins','stars'],P:['coal','sepia','ash']},
+ cave:{L:['cave','stars'],P:['void','ash','ink']},
+ caveglow:{L:['cave','glow'],P:['sepia','gold']},
+ garden:{L:['hills','tree','blossom'],P:['forest','moss','jade']},
+ orchard:{L:['hills','tree','birds'],P:['moss','olive','jade']},
+ vines:{L:['vines','hills'],P:['plum','forest','wine']},
+ palms:{L:['dunes','palms'],P:['amber','sand','saffron']},
+ olive:{L:['hills','tree'],P:['olive','moss','sepia']},
+ wheat:{L:['wheat','horizon'],P:['gold','olive','saffron']},
+ sunfield:{L:['wheat','sunDisc'],P:['saffron','gold']},
+ sprout:{L:['soil','sprout'],P:['moss','forest','jade']},
+ shadows:{L:['shadows','sunDisc'],P:['sepia','ash','sand']},
+ birds:{L:['clouds','birds'],P:['dawnrose','ice','pearl']},
+ birdsdawn:{L:['dawnGlow','birds'],P:['rose','amber','dawnrose']},
+ swarm:{L:['swarm','horizon'],P:['ash','coal','sepia']},
+ wool:{L:['wool','horizon'],P:['pearl','ash','ice']},
+ bees:{L:['grass','bees'],P:['gold','moss','saffron']},
+ honeycomb:{L:['honeycomb','glow'],P:['gold','saffron','amber']},
+ web:{L:['web','stars'],P:['ash','ink','pearl']},
+ ants:{L:['soil','ants'],P:['sand','olive','sepia']},
+ cattle:{L:['hills','cattle'],P:['olive','sand','moss']},
+ path:{L:['ridgesFar','path'],P:['plum','sand','lilac']},
+ nightpath:{L:['stars','path'],P:['ink','indigo','void']},
+ dawnpath:{L:['dawnGlow','path'],P:['dawnrose','rose','amber']},
+ balance:{L:['balance','stars'],P:['pearl','ink','iron']},
+ pen:{L:['pen','glow'],P:['sepia','pearl','ink']},
+ dew:{L:['grass','dew'],P:['mint','forest','jade']}
 };
 
 const SCENES=[]; const SCENE_OF={};
@@ -713,7 +996,254 @@ const L={
  dew(t){ for(let i=0;i<26;i++){ const s=FIELD[i], x=s.x*W, y=H*(.60+s.y*.32),
      sp=.5+.5*Math.abs(Math.sin(t*.6+s.p));
    cx.fillStyle=`rgba(255,255,255,${.30*sp})`; cx.beginPath(); cx.arc(x,y,1.6+s.s,0,7); cx.fill();
-   cx.fillStyle=`rgba(255,255,255,${.08*sp})`; cx.beginPath(); cx.arc(x,y,5+s.s*4,0,7); cx.fill(); } }
+   cx.fillStyle=`rgba(255,255,255,${.08*sp})`; cx.beginPath(); cx.arc(x,y,5+s.s*4,0,7); cx.fill(); } },
+
+ /* ── 24 further primitives, drawn for what the Qur'an itself pictures ── */
+ fire(t){ const base=H*.94;
+   for(let i=0;i<26;i++){ const x=W*(.06+ (i/26)*.88)+Math.sin(t*1.1+i)*10,
+       hh=H*(.10+.09*Math.abs(Math.sin(t*1.4+i*1.7))), w=10+ (i%4)*5;
+     const g=cx.createLinearGradient(x,base,x,base-hh);
+     g.addColorStop(0,'rgba(255,190,110,.42)'); g.addColorStop(.55,'rgba(255,120,50,.22)'); g.addColorStop(1,'rgba(255,80,30,0)');
+     cx.fillStyle=g; cx.beginPath(); cx.moveTo(x-w,base);
+     cx.quadraticCurveTo(x-w*.3,base-hh*.6,x,base-hh); cx.quadraticCurveTo(x+w*.3,base-hh*.6,x+w,base); cx.closePath(); cx.fill(); }
+   const g2=cx.createLinearGradient(0,H,0,H*.55);
+   g2.addColorStop(0,'rgba(255,140,60,.24)'); g2.addColorStop(1,'rgba(255,120,50,0)');
+   cx.fillStyle=g2; cx.fillRect(0,H*.55,W,H*.45); },
+ embers(t){ for(let i=0;i<40;i++){ const s=FIELD[i], ph=((s.y - t*.06*(.4+s.s))%1+1)%1,
+     x=s.x*W+Math.sin(t*.9+s.p)*18, y=H*(1-ph*.95), a=(1-ph)*.7;
+   cx.fillStyle=`rgba(255,${170+((i*37)%60)|0},110,${a})`;
+   cx.beginPath(); cx.arc(x,y,1+s.s*1.6,0,7); cx.fill(); } },
+ smoke(t){ for(let i=0;i<6;i++){ const x=W*(.16+i*.14)+Math.sin(t*.22+i)*20,
+     y=H*(.86-i*.03), rw=W*(.10+i*.02), rh=H*(.30+i*.04);
+   const g=cx.createRadialGradient(x,y-rh*.4,0,x,y-rh*.4,rh);
+   g.addColorStop(0,'rgba(0,0,0,.44)'); g.addColorStop(1,'rgba(0,0,0,0)');
+   cx.fillStyle=g; cx.beginPath(); cx.ellipse(x,y-rh*.4,rw,rh,0,0,7); cx.fill(); } },
+ meteors(t){ for(let i=0;i<4;i++){ const ph=((t*.30+i*.31)%1);
+     if(ph>.34) continue;
+     const p=ph/.34, x=W*(.12+i*.24)+p*W*.42, y=H*(.06+i*.10)+p*H*.30, a=Math.sin(p*3.14)*.85;
+   const g=cx.createLinearGradient(x,y,x-90,y-64);
+   g.addColorStop(0,`rgba(255,255,255,${a})`); g.addColorStop(1,'rgba(255,255,255,0)');
+   cx.strokeStyle=g; cx.lineWidth=1.7; cx.beginPath(); cx.moveTo(x,y); cx.lineTo(x-90,y-64); cx.stroke();
+   cx.fillStyle=`rgba(255,255,255,${a})`; cx.beginPath(); cx.arc(x,y,1.7,0,7); cx.fill(); } },
+ aurora(t){ for(let i=0;i<5;i++){ const x=W*(.14+i*.18)+Math.sin(t*.20+i)*W*.05;
+   const g=cx.createLinearGradient(x,H*.06,x,H*.72);
+   g.addColorStop(0,'rgba(255,255,255,0)');
+   g.addColorStop(.42,`rgba(190,255,225,${.10+.05*Math.sin(t*.5+i)})`);
+   g.addColorStop(1,'rgba(160,200,255,0)');
+   cx.fillStyle=g; cx.beginPath();
+   cx.moveTo(x-W*.05,H*.06); cx.quadraticCurveTo(x+Math.sin(t*.4+i)*40,H*.4,x-W*.03,H*.72);
+   cx.lineTo(x+W*.04,H*.72); cx.quadraticCurveTo(x+Math.sin(t*.4+i)*40+W*.06,H*.4,x+W*.06,H*.06);
+   cx.closePath(); cx.fill(); } },
+ crescent(t){ const x=W*.70,y=H*.19,r=Math.min(W,H)*.085;
+   const g=cx.createRadialGradient(x,y,0,x,y,r*5);
+   g.addColorStop(0,'rgba(255,255,255,.16)'); g.addColorStop(1,'rgba(255,255,255,0)');
+   cx.fillStyle=g; cx.fillRect(0,0,W,H);
+   cx.fillStyle='rgba(255,250,235,.92)'; cx.beginPath(); cx.arc(x,y,r,0,7); cx.fill();
+   cx.globalCompositeOperation='destination-out';
+   cx.beginPath(); cx.arc(x-r*.62,y-r*.30,r*1.02,0,7); cx.fill();
+   cx.globalCompositeOperation='source-over'; },
+ eclipse(t){ const x=W*.5,y=H*.28,r=Math.min(W,H)*.11;
+   const g=cx.createRadialGradient(x,y,r*.92,x,y,r*2.4+Math.sin(t*.5)*6);
+   g.addColorStop(0,'rgba(255,240,210,.55)'); g.addColorStop(1,'rgba(255,220,180,0)');
+   cx.fillStyle=g; cx.beginPath(); cx.arc(x,y,r*2.6,0,7); cx.fill();
+   cx.fillStyle='rgba(0,0,0,.92)'; cx.beginPath(); cx.arc(x,y,r,0,7); cx.fill(); },
+ arch(t){ const x=W*.5, top=H*.22, w=Math.min(W,H)*.20, bot=H*.86;
+   cx.strokeStyle='rgba(255,255,255,.20)'; cx.lineWidth=1.4;
+   cx.beginPath(); cx.moveTo(x-w,bot); cx.lineTo(x-w,top+w*.5);
+   cx.quadraticCurveTo(x-w,top,x,top-w*.12); cx.quadraticCurveTo(x+w,top,x+w,top+w*.5);
+   cx.lineTo(x+w,bot); cx.stroke();
+   const g=cx.createLinearGradient(0,top,0,bot);
+   g.addColorStop(0,`rgba(255,240,210,${.16+.05*Math.sin(t*.5)})`); g.addColorStop(1,'rgba(255,220,180,0)');
+   cx.fillStyle=g; cx.beginPath(); cx.moveTo(x-w,bot); cx.lineTo(x-w,top+w*.5);
+   cx.quadraticCurveTo(x-w,top,x,top-w*.12); cx.quadraticCurveTo(x+w,top,x+w,top+w*.5);
+   cx.lineTo(x+w,bot); cx.closePath(); cx.fill(); },
+ gate(t){ const x=W*.5, w=Math.min(W,H)*.13, top=H*.30, bot=H*.88, sw=Math.sin(t*.35)*.5+.5;
+   cx.strokeStyle='rgba(255,255,255,.22)'; cx.lineWidth=1.3;
+   [-1,1].forEach(s=>{ const off=s*w*(.06+sw*.55);
+     cx.save(); cx.translate(off,0);
+     cx.beginPath(); cx.moveTo(x+s*w*.06,bot); cx.lineTo(x+s*w*.06,top+w*.6);
+     cx.quadraticCurveTo(x+s*w*.06,top,x+s*w,top+w*.2); cx.lineTo(x+s*w,bot); cx.stroke();
+     cx.restore(); });
+   const g=cx.createLinearGradient(x,top,x,bot);
+   g.addColorStop(0,`rgba(255,255,255,${.06+sw*.14})`); g.addColorStop(1,'rgba(255,255,255,0)');
+   cx.fillStyle=g; cx.fillRect(x-w*.5,top,w,bot-top); },
+ steps(t){ for(let i=0;i<11;i++){ const p=i/11, y=H*(.90-p*.66), wdt=W*(.34-p*.20),
+     a=.06+.13*Math.abs(Math.sin(t*.6-p*3));
+   cx.strokeStyle=`rgba(255,255,255,${a})`; cx.lineWidth=1.3;
+   cx.beginPath(); cx.moveTo(W*.5-wdt,y); cx.lineTo(W*.5+wdt,y); cx.stroke(); }
+   const g=cx.createRadialGradient(W*.5,H*.20,0,W*.5,H*.20,H*.30);
+   g.addColorStop(0,'rgba(255,255,255,.14)'); g.addColorStop(1,'rgba(255,255,255,0)');
+   cx.fillStyle=g; cx.fillRect(0,0,W,H); },
+ web(t){ const x=W*.5,y=H*.40,R=Math.min(W,H)*.30, sp=8;
+   cx.strokeStyle=`rgba(255,255,255,${.13+.04*Math.sin(t*.5)})`; cx.lineWidth=.9;
+   for(let i=0;i<sp;i++){ const a=i*6.283/sp;
+     cx.beginPath(); cx.moveTo(x,y); cx.lineTo(x+Math.cos(a)*R,y+Math.sin(a)*R*.9); cx.stroke(); }
+   for(let r=1;r<=6;r++){ const rr=R*r/6;
+     cx.beginPath();
+     for(let i=0;i<=sp;i++){ const a=i*6.283/sp, sag=rr*.10;
+       const px=x+Math.cos(a)*rr, py=y+Math.sin(a)*rr*.9;
+       i?cx.quadraticCurveTo(x+Math.cos(a-3.14/sp)*(rr-sag),y+Math.sin(a-3.14/sp)*(rr-sag)*.9,px,py):cx.moveTo(px,py); }
+     cx.stroke(); } },
+ swarm(t){ for(let i=0;i<60;i++){ const s=FIELD[i%FIELD.length],
+     x=((s.x + t*.05*(.5+s.s))%1.2-.1)*W, y=H*(.16+s.y*.66)+Math.sin(t*2.2+s.p)*9;
+   cx.save(); cx.translate(x,y); cx.rotate(Math.sin(t*1.5+s.p)*.6);
+   cx.fillStyle=`rgba(0,0,0,${.30+s.s*.30})`;
+   cx.beginPath(); cx.ellipse(0,0,3.4+s.s*2,1.3,0,0,7); cx.fill(); cx.restore(); } },
+ wool(t){ for(let i=0;i<24;i++){ const s=FIELD[i], y=(((s.y - t*.02*s.s)%1)+1)%1,
+     x=s.x*W+Math.sin(t*.3+s.p)*26, r=8+s.s*16;
+   const g=cx.createRadialGradient(x,y*H,0,x,y*H,r);
+   g.addColorStop(0,`rgba(255,255,255,${.10+s.s*.06})`); g.addColorStop(1,'rgba(255,255,255,0)');
+   cx.fillStyle=g; cx.beginPath(); cx.arc(x,y*H,r,0,7); cx.fill(); } },
+ shadows(t){ for(let i=0;i<9;i++){ const x=W*(.08+i*.11), len=H*(.20+.06*Math.sin(t*.25+i));
+   cx.fillStyle='rgba(0,0,0,.36)'; cx.beginPath();
+   cx.moveTo(x,H*.80); cx.lineTo(x+6,H*.80); cx.lineTo(x+22+i*3,H*.80+len); cx.lineTo(x+10+i*3,H*.80+len);
+   cx.closePath(); cx.fill(); }
+   const g=cx.createLinearGradient(0,H*.5,0,H);
+   g.addColorStop(0,'rgba(255,255,255,.06)'); g.addColorStop(1,'rgba(0,0,0,.3)');
+   cx.fillStyle=g; cx.fillRect(0,H*.5,W,H*.5); },
+ mirage(t){ for(let i=0;i<7;i++){ const y=H*(.72+i*.026)+Math.sin(t*.8+i)*2;
+   cx.strokeStyle=`rgba(255,255,255,${.14-i*.016})`; cx.lineWidth=1.1; cx.beginPath();
+   for(let x=0;x<=W;x+=10) cx.lineTo(x,y+Math.sin(x/26+t*1.5+i)*1.8); cx.stroke(); }
+   const g=cx.createLinearGradient(0,H*.66,0,H*.86);
+   g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(.5,'rgba(255,255,255,.10)'); g.addColorStop(1,'rgba(255,255,255,0)');
+   cx.fillStyle=g; cx.fillRect(0,H*.66,W,H*.2); },
+ abyss(t){ for(let l=0;l<7;l++){ const base=H*(.18+l*.12);
+   cx.beginPath(); cx.moveTo(0,H);
+   for(let x=0;x<=W;x+=10) cx.lineTo(x, base+Math.sin(x/(190-l*18)+t*(.12+l*.05)+l)*(7+l*4));
+   cx.lineTo(W,H); cx.closePath(); cx.fillStyle=`rgba(0,0,0,${.13+l*.055})`; cx.fill(); }
+   const g=cx.createRadialGradient(W*.5,H*.06,0,W*.5,H*.06,H*.5);
+   g.addColorStop(0,'rgba(190,220,255,.13)'); g.addColorStop(1,'rgba(190,220,255,0)');
+   cx.fillStyle=g; cx.fillRect(0,0,W,H); },
+ pearls(t){ for(let i=0;i<20;i++){ const s=FIELD[i], ph=((s.y - t*.05*(.4+s.s))%1+1)%1,
+     x=s.x*W+Math.sin(t*.5+s.p)*14, y=H*(.98-ph*.9), r=2+s.s*4;
+   cx.fillStyle=`rgba(255,255,255,${.13+.16*(1-ph)})`;
+   cx.beginPath(); cx.arc(x,y,r,0,7); cx.fill();
+   cx.fillStyle=`rgba(255,255,255,${.30*(1-ph)})`;
+   cx.beginPath(); cx.arc(x-r*.3,y-r*.3,r*.32,0,7); cx.fill(); } },
+ balance(t){ const x=W*.5, y=H*.34, arm=Math.min(W,H)*.20, tilt=Math.sin(t*.42)*.10;
+   cx.strokeStyle='rgba(255,255,255,.26)'; cx.lineWidth=1.4;
+   cx.beginPath(); cx.moveTo(x,y-arm*.55); cx.lineTo(x,y+arm*.9); cx.stroke();
+   cx.save(); cx.translate(x,y); cx.rotate(tilt);
+   cx.beginPath(); cx.moveTo(-arm,0); cx.lineTo(arm,0); cx.stroke();
+   [-1,1].forEach(s=>{ cx.beginPath(); cx.moveTo(s*arm,0); cx.lineTo(s*arm,arm*.34); cx.stroke();
+     cx.beginPath(); cx.arc(s*arm,arm*.34,arm*.22,0,3.14); cx.stroke(); });
+   cx.restore(); },
+ pen(t){ const y=H*.46, x0=W*.16, x1=W*.84, p=(t*.24)%1.6;
+   cx.strokeStyle='rgba(255,255,255,.30)'; cx.lineWidth=1.6;
+   cx.beginPath();
+   const end=x0+(x1-x0)*Math.min(1,p);
+   for(let x=x0;x<=end;x+=6) cx.lineTo(x,y+Math.sin((x-x0)/34)*9);
+   cx.stroke();
+   if(p<=1){ cx.fillStyle='rgba(255,255,255,.5)';
+     cx.beginPath(); cx.arc(end,y+Math.sin((end-x0)/34)*9,2.2,0,7); cx.fill(); }
+   for(let i=1;i<4;i++){ const yy=y+i*H*.09;
+     cx.strokeStyle=`rgba(255,255,255,${.12-i*.03})`; cx.lineWidth=1; cx.beginPath();
+     for(let x=x0;x<=x1;x+=6) cx.lineTo(x,yy+Math.sin((x-x0)/34+i)*7); cx.stroke(); } },
+ hail(t){ for(let i=0;i<70;i++){ const s=FIELD[i%FIELD.length],
+     y=((s.y+t*(.26+s.s*.2))%1.15)*H-40, x=s.x*W+Math.sin(t*.3+s.p)*8;
+   cx.fillStyle=`rgba(255,255,255,${.28+s.s*.3})`;
+   cx.beginPath(); cx.arc(x,y,1.4+s.s*1.6,0,7); cx.fill(); } },
+ whirlwind(t){ cx.save(); cx.translate(W*.5,H*.62);
+   for(let i=0;i<52;i++){ const p=i/52, a=t*1.5+p*13, r=(1-p)*Math.min(W,H)*.30+8,
+     x=Math.cos(a)*r, y=-p*H*.55+Math.sin(a)*r*.22;
+   cx.fillStyle=`rgba(255,255,255,${.06+p*.16})`;
+   cx.beginPath(); cx.arc(x,y,1.2+p*2.2,0,7); cx.fill(); }
+   cx.restore(); },
+ vines(t){ for(let i=0;i<5;i++){ const x=W*(.12+i*.19), sway=Math.sin(t*.4+i)*7;
+   cx.strokeStyle='rgba(0,0,0,.55)'; cx.lineWidth=2;
+   cx.beginPath(); cx.moveTo(x,H*.30);
+   for(let y=H*.30;y<H*.82;y+=12) cx.lineTo(x+Math.sin(y/40+i)*10+sway*(y/H),y);
+   cx.stroke();
+   for(let b=0;b<4;b++){ const yy=H*(.40+b*.11), xx=x+Math.sin(yy/40+i)*10+sway*(yy/H);
+     cx.fillStyle='rgba(0,0,0,.5)';
+     for(let g=0;g<3;g++){ cx.beginPath(); cx.arc(xx+(g-1)*5,yy+Math.abs(g-1)*4,3.4,0,7); cx.fill(); } } }
+   cx.strokeStyle='rgba(255,255,255,.10)'; cx.lineWidth=1;
+   cx.beginPath(); cx.moveTo(0,H*.30); cx.lineTo(W,H*.30); cx.stroke(); },
+ caravan(t){ const base=H*.79;
+   [[.14,1],[.28,.9],[.40,1.05],[.55,.86]].forEach((d,i)=>{
+     const x=W*((d[0]+t*.012)%1.25-.12), s=Math.min(W,H)*.030*d[1], bob=Math.sin(t*1.6+i)*1.6;
+   cx.fillStyle='rgba(0,0,0,.66)';
+   cx.beginPath(); cx.ellipse(x,base+bob,s*1.25,s*.52,0,0,7); cx.fill();
+   cx.beginPath(); cx.ellipse(x-s*.15,base-s*.55+bob,s*.42,s*.42,0,0,7); cx.fill();
+   cx.beginPath(); cx.moveTo(x+s*1.05,base-s*.2+bob); cx.lineTo(x+s*1.7,base-s*1.25+bob);
+   cx.lineTo(x+s*1.95,base-s*1.15+bob); cx.lineTo(x+s*1.35,base+bob); cx.closePath(); cx.fill();
+   cx.strokeStyle='rgba(0,0,0,.66)'; cx.lineWidth=1.8;
+   [-.6,-.1,.5,.9].forEach(o=>{ cx.beginPath(); cx.moveTo(x+s*o,base+s*.35+bob);
+     cx.lineTo(x+s*o+Math.sin(t*3+o*4)*2,base+s*1.25+bob); cx.stroke(); }); }); },
+ ruins(t){ const base=H*.82;
+   [[.10,.16,.05],[.20,.10,.04],[.33,.20,.06],[.48,.09,.05],[.60,.15,.045],[.74,.22,.05],[.88,.12,.04]]
+   .forEach(d=>{ cx.fillStyle='rgba(0,0,0,.62)';
+     cx.fillRect(W*d[0]-W*d[2]*.5, base-H*d[1], W*d[2], H*d[1]);
+     cx.fillStyle='rgba(0,0,0,.45)';
+     cx.fillRect(W*d[0]-W*d[2]*.5, base-H*d[1]-4, W*d[2]*.6, 5); });
+   cx.fillStyle='rgba(0,0,0,.5)'; cx.fillRect(0,base,W,H-base);
+   for(let i=0;i<20;i++){ const s=FIELD[i], y=(((s.y - t*.012*s.s)%1)+1)%1;
+     cx.fillStyle=`rgba(255,255,255,${.05+s.s*.05})`;
+     cx.beginPath(); cx.arc(s.x*W,y*H*.8,s.r*.8,0,7); cx.fill(); } },
+ honeycomb(t){ const r=Math.min(W,H)*.055, hgt=r*Math.sqrt(3);
+   cx.strokeStyle='rgba(255,255,255,.13)'; cx.lineWidth=1;
+   for(let row=-1;row*hgt*.5<H+hgt;row++){ for(let col=-1;col*r*1.5<W+r;col++){
+     const x=col*r*1.5, y=row*hgt+(col%2?hgt*.5:0), fl=.5+.5*Math.sin(t*.6+col*.7+row);
+     cx.beginPath();
+     for(let i=0;i<6;i++){ const a=i*1.047; const px=x+Math.cos(a)*r, py=y+Math.sin(a)*r;
+       i?cx.lineTo(px,py):cx.moveTo(px,py); }
+     cx.closePath(); cx.globalAlpha=.35+fl*.5; cx.stroke(); } }
+   cx.globalAlpha=1; },
+ orbit(t){ const cxp=W*.5, cyp=H*.36;
+   cx.strokeStyle='rgba(255,255,255,.10)'; cx.lineWidth=1;
+   [[.30,.10],[.44,.16]].forEach((o,i)=>{ cx.beginPath();
+     cx.ellipse(cxp,cyp,Math.min(W,H)*o[0],Math.min(W,H)*o[1],0,0,7); cx.stroke(); });
+   const a1=t*.30, a2=-t*.22;
+   const x1=cxp+Math.cos(a1)*Math.min(W,H)*.30, y1=cyp+Math.sin(a1)*Math.min(W,H)*.10;
+   const x2=cxp+Math.cos(a2)*Math.min(W,H)*.44, y2=cyp+Math.sin(a2)*Math.min(W,H)*.16;
+   let g=cx.createRadialGradient(x1,y1,0,x1,y1,H*.20);
+   g.addColorStop(0,'rgba(255,228,170,.34)'); g.addColorStop(1,'rgba(255,228,170,0)');
+   cx.fillStyle=g; cx.fillRect(0,0,W,H);
+   cx.fillStyle='rgba(255,240,205,.85)'; cx.beginPath(); cx.arc(x1,y1,Math.min(W,H)*.035,0,7); cx.fill();
+   cx.fillStyle='rgba(230,240,255,.75)'; cx.beginPath(); cx.arc(x2,y2,Math.min(W,H)*.020,0,7); cx.fill(); },
+ dust(t){ for(let i=0;i<80;i++){ const s=FIELD[i%FIELD.length],
+     x=s.x*W+Math.sin(t*.3+s.p)*30, y=(((s.y - t*.014*s.s)%1)+1)%1*H;
+   cx.fillStyle=`rgba(255,255,255,${.05+s.s*.16})`;
+   cx.beginPath(); cx.arc(x,y,s.r*.7,0,7); cx.fill(); } },
+ veil(t){ for(let i=0;i<7;i++){ const x=W*(i/6), sway=Math.sin(t*.35+i)*18;
+   const g=cx.createLinearGradient(x-40,0,x+40,0);
+   g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(.5,`rgba(255,255,255,${.07+.03*Math.sin(t*.5+i)})`);
+   g.addColorStop(1,'rgba(255,255,255,0)');
+   cx.fillStyle=g; cx.beginPath();
+   cx.moveTo(x-46,0); cx.quadraticCurveTo(x+sway,H*.5,x-30,H); cx.lineTo(x+30,H);
+   cx.quadraticCurveTo(x+sway+60,H*.5,x+46,0); cx.closePath(); cx.fill(); } },
+ wellmouth(t){ const x=W*.5,y=H*.68,r=Math.min(W,H)*.15;
+   cx.fillStyle='rgba(0,0,0,.72)'; cx.beginPath(); cx.ellipse(x,y,r,r*.36,0,0,7); cx.fill();
+   cx.strokeStyle='rgba(255,255,255,.22)'; cx.lineWidth=1.5;
+   cx.beginPath(); cx.ellipse(x,y,r,r*.36,0,0,7); cx.stroke();
+   cx.strokeStyle='rgba(255,255,255,.16)'; cx.lineWidth=1.1;
+   cx.beginPath(); cx.moveTo(x,H*.10); cx.lineTo(x+Math.sin(t*.6)*5,y-r*.1); cx.stroke();
+   const g=cx.createRadialGradient(x,H*.08,0,x,H*.08,H*.34);
+   g.addColorStop(0,'rgba(255,255,255,.14)'); g.addColorStop(1,'rgba(255,255,255,0)');
+   cx.fillStyle=g; cx.fillRect(0,0,W,H); },
+ whale(t){ const x=W*.5+Math.sin(t*.22)*W*.06, y=H*.66;
+   cx.fillStyle='rgba(0,0,0,.55)';
+   cx.beginPath(); cx.ellipse(x,y,W*.26,H*.09,Math.sin(t*.2)*.05,0,7); cx.fill();
+   cx.beginPath(); cx.moveTo(x-W*.25,y); cx.lineTo(x-W*.34,y-H*.05); cx.lineTo(x-W*.33,y+H*.05); cx.closePath(); cx.fill();
+   for(let i=0;i<3;i++){ const yy=y-H*.13-i*10;
+     cx.strokeStyle=`rgba(255,255,255,${.08-i*.02})`; cx.lineWidth=1; cx.beginPath();
+     for(let px=0;px<=W;px+=10) cx.lineTo(px,yy+Math.sin(px/70+t*.4+i)*4); cx.stroke(); } },
+ splitmoon(t){ const x=W*.5,y=H*.24,r=Math.min(W,H)*.10, gap=6+Math.sin(t*.3)*3;
+   const g=cx.createRadialGradient(x,y,0,x,y,r*4.5);
+   g.addColorStop(0,'rgba(255,255,255,.18)'); g.addColorStop(1,'rgba(255,255,255,0)');
+   cx.fillStyle=g; cx.fillRect(0,0,W,H);
+   [-1,1].forEach(s=>{ cx.save();
+     cx.beginPath(); cx.rect(s<0?0:x+gap,0,s<0?x-gap:W,H); cx.clip();
+     cx.fillStyle='rgba(255,252,240,.88)';
+     cx.beginPath(); cx.arc(x+s*gap,y,r,0,7); cx.fill(); cx.restore(); }); },
+ quake(t){ const sh=Math.sin(t*7)*2.2;
+   for(let l=0;l<4;l++){ const pts=[];
+     for(let x=0;x<=W;x+=16) pts.push([x+sh,H*(.74+l*.06)-Math.sin(x/180+l)*H*.02]);
+     silhouette(pts,.18+l*.16); }
+   cx.strokeStyle='rgba(255,255,255,.16)'; cx.lineWidth=1.3;
+   for(let i=0;i<3;i++){ let x=W*(.22+i*.28)+sh, y=H*.74;
+     cx.beginPath(); cx.moveTo(x,y);
+     for(let k=0;k<5;k++){ x+=(k%2?12:-9); y+=H*.045; cx.lineTo(x,y); } cx.stroke(); } }
 };
 
 /* ── render loop with palette + layer cross-fade ── */
@@ -750,40 +1280,113 @@ function frame(now){
 }
 
 /* ══════════════════════════════════════════════════════════
-   RANDOMNESS — a shuffle bag, not a dice roll.
-   Every verse in the current pool is shown once before any
-   verse repeats, and the order reshuffles each round.
+   HOW THE NEXT ONE IS CHOSEN — a deck that remembers you.
+   Not a dice roll and no longer a plain shuffle bag:
+     · every verse in the pool is dealt once before any of them
+       comes back, and the deck is reshuffled for each round
+     · the deck and a memory of what you have seen are written
+       to this device, so closing the page and coming back
+       carries on where you were instead of starting over
+     · a card is put back under the deck rather than dealt if
+       it repeats the surah you just read, or the scene you are
+       still looking at, or anything from your recent memory
+   The effect is that the page rarely shows you the same thing
+   twice, and almost never shows you the same sky twice in a row.
    ══════════════════════════════════════════════════════════ */
-function Bag(items){ this.src=items; this.q=[]; this.lastSeen=null; }
-Bag.prototype.refill=function(){
-  this.q=this.src.slice();
-  for(let i=this.q.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [this.q[i],this.q[j]]=[this.q[j],this.q[i]]; }
-  if(this.q.length>1 && this.q[this.q.length-1]===this.lastSeen) [this.q[0],this.q[this.q.length-1]]=[this.q[this.q.length-1],this.q[0]];
-};
-Bag.prototype.next=function(){
-  if(!this.q.length) this.refill();
-  const v=this.q.pop(); this.lastSeen=v; return v;
-};
-Bag.prototype.remaining=function(){ return this.q.length; };
+let DECKS={}, RECENT=[];          /* both are filled from this device at start-up */
+let LASTSURAH=null, LASTGROUP=null;
+function loadDeck(){ DECKS=store.get('decks')||{}; RECENT=store.get('recent')||[]; }
+function shuffled(a){ a=a.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a; }
+function draw(key,items,meta){
+  if(!items||!items.length) return null;
+  const valid=new Set(items);
+  let deck=(DECKS[key]||[]).filter(i=>valid.has(i));
+  if(!deck.length) deck=shuffled(items);
+  const win=Math.min(RECENT.length,Math.max(0,Math.floor(items.length*.35)));
+  const recent=win?RECENT.slice(-win):[];
+  let pick=null; const passed=[];
+  for(let n=0;n<12 && deck.length;n++){
+    const c=deck.pop(), m=meta(c);
+    if(recent.indexOf(m.k)<0 && !(m.s!=null&&m.s===LASTSURAH) && !(m.g!=null&&m.g===LASTGROUP)){ pick=c; break; }
+    passed.push(c);
+  }
+  if(pick==null && passed.length) pick=passed.shift();
+  DECKS[key]=passed.concat(deck);
+  store.set('decks',DECKS);
+  if(pick!=null){ const m=meta(pick);
+    LASTSURAH=m.s; LASTGROUP=m.g;
+    RECENT.push(m.k); if(RECENT.length>140) RECENT=RECENT.slice(-140);
+    store.set('recent',RECENT); }
+  return pick;
+}
 
 /* ══ classify any verse in the Qur'an by what it speaks about ══ */
-const RULES=[['ship',/\bship|sail|vessel|\bark\b/i],['twoseas',/two seas|barrier between/i],
- ['sea',/\bsea\b|\bocean|waves|the deep/i],['lightning',/lightning|thunder/i],
- ['rain',/\brain|showers|water from the sky|sends down water/i],['clouds',/\bcloud/i],
- ['sandwind',/\bwinds?\b/i],['cave',/\bcave\b/i],['bees',/\bbee|honey/i],['ants',/\bants?\b/i],
- ['birds',/\bbird/i],['cattle',/cattle|livestock|sheep|camel|grazing/i],['palms',/palm/i],
- ['olive',/olive/i],['wheat',/grain|crops|harvest|sown|corn|seed/i],
- ['garden',/garden|orchard|vineyard|fruit|vines/i],['river',/rivers|streams|flow beneath/i],
- ['spring',/spring|fountain|\bwell\b/i],['mountains',/mountain/i],
- ['dunes',/desert|sand|barren|dry land|parched/i],['stars',/\bstars?\b|constellation/i],
- ['moon',/\bmoon/i],['sun',/\bsun\b|sunlight/i],['dawn',/dawn|daybreak|morning|forenoon/i],
- ['night',/\bnight/i],['lamp',/niche|lamp/i],['light',/\blight\b|darkness/i],
- ['path',/straight path|the way|his steps|footsteps|journey|travel/i],
- ['sprout',/grow|earth to life|dead land|revive/i],['dew',/tranquil|serenity|calm|peace/i]];
-const SPREAD=['stars','night','moon','dawn','clouds','mist','hills','mountains','path','sea','dunes','river','garden','light','peaks'];
-function classify(text,seed){
+const RULES=[
+ ['splitmoon',/moon (has )?split|cleft asunder/i],['whale',/\bwhale|great fish|belly of the fish/i],
+ ['web',/\bspider/i],['swarm',/locusts?|moths?|scattered creatures/i],
+ ['wool',/carded wool|tufts of wool/i],['honeycomb',/honey/i],['bees',/\bbees?\b/i],
+ ['ants',/\bants?\b/i],['ship',/\bship|sail|vessel|\bark\b|floating/i],
+ ['twoseas',/two seas|two bodies of water|barrier between/i],
+ ['pearls',/pearl|coral/i],['abyss',/depths of a? ?(dark )?sea|darkness upon darkness|fathomless/i],
+ ['seamoon',/\bsea\b.*\bmoon|\bmoon\b.*\bsea\b/i],
+ ['sea',/\bsea\b|\bocean|waves|the deep|shore/i],
+ ['thunderrain',/thunder.*rain|rain.*thunder/i],['lightning',/lightning|thunder|thunderbolt/i],
+ ['hail',/\bhail\b|mountains of ice/i],
+ ['rain',/\brain|showers|water from the sky|sends down water|downpour/i],
+ ['clouds',/\bcloud/i],['whirlwind',/whirlwind|tornado|violent wind/i],
+ ['wind',/\bwinds?\b|breeze|gale/i],['dust',/\bdust\b|scattered dust|specks/i],
+ ['smoke',/\bsmoke\b|vapou?r/i],['fire',/\bfire\b|blaze|flame|burning|hellfire|scorching/i],
+ ['embers',/spark|ember|kindl/i],['quake',/earthquake|quake|shakes?( violently)?|convulse|tremble/i],
+ ['ruins',/\bruins?\b|razed|laid waste|deserted|(town|city|dwellings) (was |were )?destroyed|overturned/i],
+ ['caravan',/caravan|camel/i],['mirage',/mirage|illusion of water/i],
+ ['well',/\bwell\b|bucket|cistern/i],['cave',/\bcave\b/i],
+ ['birds',/\bbird|wings|hoopoe|flocks/i],
+ ['cattle',/cattle|livestock|sheep|grazing|herds?/i],['palms',/palm|dates?\b/i],
+ ['vines',/vine|grape/i],['olive',/olive|\bfig\b/i],
+ ['wheat',/grain|crops|harvest|sown|corn|\bseed|ears of/i],
+ ['orchard',/orchard|vineyard/i],['garden',/garden|fruit|paradise|blossom/i],
+ ['riverbank',/rivers.*palm|palm.*rivers/i],['river',/rivers|streams|flow beneath|flowing water/i],
+ ['spring',/spring|fountain|gushing|wellspring/i],
+ ['oasis',/shade and water|watered|green after/i],
+ ['peaks',/lofty|towering|summit/i],['mountains',/mountain|\bhills?\b|firm pegs/i],
+ ['dunes',/desert|sand|barren|dry land|parched|wilderness/i],
+ ['shadows',/shadow|shade|lengthens/i],
+ ['meteors',/meteor|shooting star|piercing flame|hurled/i],
+ ['orbit',/orbit|swimming in|each in a? ?course|celestial/i],
+ ['stars',/\bstars?\b|constellation|planets/i],
+ ['crescent',/crescent|new moon|phases/i],['moon',/\bmoon/i],
+ ['eclipse',/eclipse|darkened|sun is wrapped/i],
+ ['sunfield',/\bsun\b.*(crops|grain|field)/i],['sun',/\bsun\b|sunlight|midday|heat of/i],
+ ['dawn',/dawn|daybreak|\bmorning|forenoon|first light/i],
+ ['dusk',/dusk|sunset|evening|twilight|afternoon/i],
+ ['night',/\bnight|darkness of/i],['lamp',/niche|lamp|wick|oil/i],
+ ['veil',/\bveil|curtain|screen|covering/i],
+ ['gate',/\bgates?\b|\bdoors?\b|opened for them/i],
+ ['ascent',/ascend|stairway|ways of ascent|rise up|climb/i],
+ ['arch',/throne|sanctuary|chamber|prayer niche|the House/i],
+ ['balance',/balance|scales?|weigh|measure|justice|equity/i],
+ ['pen',/\bpen\b|write|written|record|book of|inscribed|tablet/i],
+ ['light',/\blight\b|radiance|shining/i],
+ ['nightpath',/night.*(way|path)|(way|path).*night/i],
+ ['path',/straight path|the way|his steps|footsteps|journey|travel|guided to/i],
+ ['sprout',/grow|earth to life|dead land|revive|sprout|green/i],
+ ['web',/frail|flimsy|feeble/i],
+ ['dew',/tranquil|serenity|calm|\bpeace\b|contentment|at rest/i],
+ ['mist',/hidden|unseen|obscure|concealed/i],
+ ['aurora',/wonders|signs in the heavens|glory of/i]];
+const SPREAD=['stars','night','moon','dawn','dusk','clouds','mist','hills','mountains','peaks','path',
+ 'nightpath','dawnpath','sea','seanight','seamoon','dunes','river','garden','orchard','light','veil',
+ 'meadow','ridgemist','aurora','crescent','orbit','ascent','lampnight','birdsdawn','sprout','dew',
+ 'palms','olive','wheat','sunfield','oasis','shadows','spring','arch','pearls','honeycomb','wind'];
+/* a rule hit, or nothing */
+function classified(text){
   for(const [g,re] of RULES) if(re.test(text)) return g;
-  return SPREAD[Math.abs(seed)%SPREAD.length];
+  return null;
+}
+function classify(text,seed){
+  return classified(text) || SPREAD[Math.abs(seed)%SPREAD.length];
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -825,8 +1428,8 @@ const store={
 
 /* ══ interface strings — English is the source, everything else is translated once and cached ══ */
 const STR={
-'menu.mood':'Mood','menu.stories':'Stories','menu.hearted':'Hearted','menu.language':'Language',
-'menu.settings':'Settings','menu.about':'About','menu.explain':'Explain',
+'menu.mood':'Mood','menu.stories':'Stories','menu.favorites':'Favorites','menu.language':'Language',
+'menu.settings':'Settings','menu.about':'About',
 'mood.title':'Mood',
 'mood.lede':"Name where you are right now. You'll be given verses that meet you there, in a different order every time.",
 'mood.share':'Say it in your own words',
@@ -836,7 +1439,9 @@ const STR={
 'mood.group.feeling':'How you feel','mood.group.struggle':'What you are struggling with','mood.group.life':'Where you are in life',
 'mood.count':'verses',
 'lang.lede':'Every option here is a published scholarly translation, not a machine translation, so the meaning of the verse stays sound in any language.',
-'lang.note':'English is built in and works with no connection. Any other language is downloaded once, then kept for the rest of your visit. The menus stay in English; the verse, and the explanation of it, follow the language you pick.',
+'lang.note':'Picking a language changes the whole page — the verse, the menus, the moods, the stories and the explanations. The verse is always a published scholarly translation. Everything around it is translated once and then kept on this device, so coming back to a language you have used is instant and works with no connection.',
+'lang.translating':'Putting the rest of the page into your language…',
+'lang.trFailed':'The verses are in your language. The menus around them could not be translated just now — that part needs a connection.',
 'lang.search':'Search languages','lang.builtin':'Built in · Rowwad Translation Center',
 'lang.loading':'Loading the list of translations','lang.downloading':'Downloading…',
 'lang.offline':'The list of translations needs a connection. English is built in and keeps working.',
@@ -853,21 +1458,33 @@ const STR={
 'set.ref':'Verse reference','set.refSub':'Show the surah name and verse number under the verse.',
 'set.pool':'Where verses come from','set.poolSub':'Chosen keeps to verses picked and tagged by mood. Whole Qur\'an draws from all 6,236, and needs a connection the first time.',
 'set.chosen':'Chosen','set.all':"Whole Qur'an",
-'set.explain':'Explanations','set.explainSub':'Swipe up on a verse, or use Explain in the menu, and a published tafsir is fetched for that verse — Al-Mukhtasar, the abridged commentary, in your chosen language where it exists. It is free, needs no account, and each verse is kept on this device once you have read it.',
+'set.explain':'Explanations','set.explainSub':'Swipe up on a verse and a published tafsir is brought for it — Al-Mukhtasar, the abridged commentary, in your chosen language where it exists. Swipe back down to put it away. It is free, needs no account, and each verse is kept on this device once you have read it.',
 'set.length':'How much of it','set.lengthSub':'Short opens with a few sentences and lets you unfold the rest. Full opens the whole commentary straight away.',
 'set.short':'Short','set.long':'Full',
-'set.gestures':'How to use it','set.gesturesSub':'Tap anywhere for the next verse. Double tap to heart it and keep it. Swipe up to have it explained. Everything you heart stays on this device.',
-'set.clear':'Hearted verses','set.clearSub':'Remove everything you have hearted on this device.','set.clearBtn':'Clear all',
-'hearted.empty':'Nothing hearted yet. Double tap a verse or a story you want to keep, and it will wait for you here.',
-'hearted.count':'kept on this device',
+'set.gestures':'How to use it','set.gesturesSub':'Tap anywhere for the next verse. Double tap to add it to your favorites. Swipe up to have it explained, and swipe back down to close. Everything you keep stays on this device.',
+'set.clear':'Favorite verses','set.clearSub':'Remove everything you have saved on this device.','set.clearBtn':'Clear all',
+'fav.empty':'Nothing saved yet. Double tap a verse or a story you want to keep, and it will wait for you here.',
+'fav.count':'kept on this device',
+'fav.added':'Added to your favorites','fav.removed':'Removed from your favorites',
 'sheet.explain':'What this means','sheet.mood':'How are you',
 'sheet.thinking':'Bringing the commentary…',
 'sheet.readFull':'Read it in full','sheet.deeper':'A fuller commentary','sheet.deepLoading':'Bringing it…',
 'sheet.source':'Short reading from ','sheet.sourceFoot':'A published tafsir, not a summary written here. Read the verse in its surah, and take anything that matters to a person of knowledge.',
 'sheet.failed':'That commentary could not be reached just now — it needs a connection the first time you open a verse. Try again in a moment.',
 'sheet.noVerse':'This one has no single verse to explain. Open any verse and swipe up.',
-'hint':'Tap for another · Double tap to heart · Swipe up to understand',
-'pill.all':"Whole Qur'an",'pill.stories':'Stories','pill.hearted':'Hearted'
+'hint':'Tap for another · Double tap to save · Swipe up to understand',
+'pill.all':"Whole Qur'an",'pill.stories':'Stories','pill.favorites':'Favorites',
+'about.lede':"Usama built this because of a small, ordinary problem: the Qur'an has an answer for almost every state a heart can be in, and almost nobody can find it in the moment they need it. When you are frightened at two in the morning, or ashamed of something you did, or so tired you cannot pray properly, you do not want to search. You want to be met. So he made a page with one verse on it, a dot in the corner, and nothing else in the way — no account, no feed, no counting of days. Open it, and something is already waiting for you. Tap, and something else comes. That is the whole idea, and he kept it that small on purpose.",
+'about.words':'Where the words come from',
+'about.wordsBody':"The English is the Rowwad Translation Center edition, published for free distribution by quranenc.com, and it is written into this page — it works with no connection at all. Every other language is a published scholarly translation drawn from the open Qur'an dataset at github.com/fawazahmed0/quran-api, which carries 490 translations across 98 languages, sourced from quranenc.com, tanzil.net and the King Fahd Complex. No verse here is machine-translated. The 377 chosen verses were read and tagged one by one; the stories are short retellings written to send you back to the surah itself, not to replace it.",
+'about.exp':'Where the explanations come from',
+'about.expBody':"Swipe up on a verse and you are shown a published tafsir — nothing is written by a machine, and nothing you do here is sent anywhere. The short reading is Al-Mukhtasar fi Tafsir al-Qur'an al-Karim, the abridged commentary by the Tafsir Center for Quranic Studies, which is only a few sentences per verse by design. Under it you can open a fuller one — Tafsir Ibn Kathir in English, and the equivalent where a language has one. Both are served as plain files from the open collection at github.com/spa5k/tafsir_api, sourced from quran.com, free and with no account or key of any kind. A verse you have read once is kept on this device and opens again with no connection. Still: an abridgement is an abridgement. Read the verse inside its surah, and take anything that matters to a person of knowledge.",
+'about.lang':'About the language you are reading this in',
+'about.langBody':'The verse is always a human translation by scholars. The page around it — these menus, the moods, the settings and the stories — is put into your language by a free translation service the first time you choose it, and then kept on this device. That part is machine work and can be clumsy; the verse never is.',
+'about.word':'A word, for whoever is reading',
+'about.wordBody':'Do not let an app stand in for the Book. This is a doorway, and a narrow one — six lines on a screen. The Qur\'an was given to be recited slowly, in Arabic if you can, sitting still, and returned to daily even when you feel nothing. Learn a little of the language; even ten words changes how a verse lands. Read a verse in its surah, not alone, because context is half the meaning. And when something here catches you, do not stop at the feeling — take it to a teacher, and act on one small thing before you look for the next verse. Consistency, however small, is loved more than intensity that burns out. Whatever good you find in this, it is from Allah; whatever error, from us, and we ask forgiveness for it.',
+'about.contact':'Contact',
+'about.contactBody':'Corrections, mistakes in a translation, a mood that is missing, or an idea worth building — Usama would like to hear it.'
 };
 let UI={}, LANGNAME='English';
 const t=k=>(UI[k]||STR[k]||k);
@@ -875,9 +1492,15 @@ const tOpt=k=>(UI[k]||STR[k]||null);   /* mood names live outside STR, so this m
 function applyStrings(){
   document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent=t(el.dataset.i18n); });
   document.getElementById('langsearch').placeholder=t('lang.search');
-  document.getElementById('langnote').innerHTML=t('lang.note');
+  document.getElementById('langnote').innerHTML=esc(t('lang.note'));
   document.getElementById('hint').textContent=t('hint');
-  buildMoodGrid(); buildSettings(); buildAbout(); renderHearted();
+  buildMoodGrid(); buildSettings(); buildAbout(); renderFavourites();
+  if(typeof CUR!=='undefined' && CUR){
+    if(CUR.type==='story'){ CUR.story=storyFor(CUR.i); paintStory(); }
+    if(S.mood) setPill(moodName(S.mood));
+    else if(S.mode==='story') setPill(t('pill.stories'));
+    else if(S.pool==='all') setPill(t('pill.all'));
+  }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -981,6 +1604,128 @@ function shorten(s,limit){
 }
 const paras=s=>s.split(/\n{2,}/).map(p=>`<p>${esc(p).replace(/\n/g,'<br>')}</p>`).join('');
 
+/* ══════════════════════════════════════════════════════════
+   THE WHOLE PAGE IN YOUR LANGUAGE
+   Picking a language changes everything on the page, not only
+   the verse: the menus, the moods, the settings, this About
+   text and the stories all follow it.
+   The verse itself is never machine-translated — it is always
+   the published scholarly edition you chose. Everything around
+   it is translated once by a free, keyless service, then kept
+   on this device, so a language you have used before switches
+   instantly and works with no connection at all.
+   ══════════════════════════════════════════════════════════ */
+const LANGCODE={english:'en',arabic:'ar',urdu:'ur',persian:'fa',farsi:'fa',dari:'fa',pashto:'ps',
+ bengali:'bn',bangla:'bn',hindi:'hi',tamil:'ta',telugu:'te',malayalam:'ml',kannada:'kn',gujarati:'gu',
+ marathi:'mr',punjabi:'pa',sindhi:'sd',nepali:'ne',sinhala:'si',sinhalese:'si',assamese:'as',
+ indonesian:'id',malay:'ms',malaysian:'ms',javanese:'jw',sundanese:'su',thai:'th',khmer:'km',
+ 'central khmer':'km',lao:'lo',burmese:'my',vietnamese:'vi',tagalog:'tl',filipino:'tl',
+ chinese:'zh-CN',mandarin:'zh-CN',japanese:'ja',korean:'ko',uighur:'ug',uyghur:'ug',
+ turkish:'tr',azerbaijani:'az',azeri:'az',uzbek:'uz',kazakh:'kk',kyrgyz:'ky',tajik:'tg',
+ turkmen:'tk',tatar:'tt',kurdish:'ku',russian:'ru',ukrainian:'uk',belarusian:'be',
+ french:'fr',spanish:'es',portuguese:'pt',italian:'it',german:'de',dutch:'nl',danish:'da',
+ swedish:'sv',norwegian:'no',finnish:'fi',polish:'pl',czech:'cs',slovak:'sk',hungarian:'hu',
+ romanian:'ro',bulgarian:'bg',greek:'el',albanian:'sq',bosnian:'bs',serbian:'sr',croatian:'hr',
+ macedonian:'mk',slovenian:'sl',lithuanian:'lt',latvian:'lv',estonian:'et',
+ swahili:'sw',somali:'so',amharic:'am',hausa:'ha',yoruba:'yo',igbo:'ig',fulah:'ff',fulani:'ff',
+ afrikaans:'af',zulu:'zu',malagasy:'mg',hebrew:'iw',armenian:'hy',georgian:'ka',
+ maranao:'tl',bosnia:'bs',norwegia:'no',dhivehi:'dv',divehi:'dv',esperanto:'eo'};
+const RTLCODES=new Set(['ar','ur','fa','ps','ug','iw','sd','dv','ku']);
+function codeFor(name){
+  const k=String(name||'English').toLowerCase().trim();
+  if(LANGCODE[k]) return LANGCODE[k];
+  for(const n in LANGCODE) if(k.indexOf(n)===0) return LANGCODE[n];
+  return null;
+}
+const TRCACHE=store.get('trcache')||{};
+const trBucket=n=>TRCACHE[n]||(TRCACHE[n]={});
+function saveTr(){
+  const langs=Object.keys(TRCACHE);
+  if(langs.length>5) langs.slice(0,langs.length-5).forEach(l=>{ if(l!==LANGNAME) delete TRCACHE[l]; });
+  store.set('trcache',TRCACHE);
+}
+async function tfetch(url){
+  const ac=(typeof AbortController!=='undefined')?new AbortController():null;
+  const timer=ac?setTimeout(()=>ac.abort(),12000):null;
+  try{
+    const r=await fetch(url,{signal:ac?ac.signal:undefined});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return await r.json();
+  } finally{ if(timer) clearTimeout(timer); }
+}
+const flatStrings=j=>{ const out=[]; (function w(x){ if(typeof x==='string') out.push(x);
+  else if(Array.isArray(x)) x.forEach(w); })(j); return out; };
+async function trBatch(texts,code){
+  const j=await tfetch('https://translate.googleapis.com/translate_a/t?client=dict-chrome-ex&sl=en&tl='+
+    encodeURIComponent(code)+texts.map(x=>'&q='+encodeURIComponent(x)).join(''));
+  const out=flatStrings(j);
+  if(out.length!==texts.length) throw new Error('shape');
+  return out;
+}
+async function trOne(text,code){
+  const j=await tfetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl='+
+    encodeURIComponent(code)+'&dt=t&q='+encodeURIComponent(text));
+  const s=(j[0]||[]).map(p=>(p&&p[0])||'').join('');
+  if(!s) throw new Error('empty'); return s;
+}
+async function trOneAlt(text,code){
+  const j=await tfetch('https://api.mymemory.translated.net/get?langpair=en%7C'+
+    encodeURIComponent(code)+'&q='+encodeURIComponent(text));
+  const s=j&&j.responseData&&j.responseData.translatedText;
+  if(!s||/MYMEMORY WARNING|QUERY LENGTH|INVALID/i.test(s)) throw new Error('alt');
+  return s;
+}
+/* one mirror, then the other, then one string at a time — whatever gets through */
+async function translateMany(texts,code){
+  const out=new Array(texts.length).fill(null);
+  const chunks=[]; let cur=[], len=0;
+  texts.forEach((x,i)=>{ if(cur.length && (len+x.length>1100 || cur.length>=10)){ chunks.push(cur); cur=[]; len=0; }
+    cur.push(i); len+=x.length; });
+  if(cur.length) chunks.push(cur);
+  for(const ch of chunks){
+    try{ const got=await trBatch(ch.map(i=>texts[i]),code); ch.forEach((i,n)=>out[i]=got[n]); continue; }catch(e){}
+    for(const i of ch){
+      try{ out[i]=await trOne(texts[i],code); }
+      catch(e){ try{ out[i]=await trOneAlt(texts[i],code); }catch(e2){} }
+    }
+  }
+  return out;
+}
+let trBusy=false;
+function applyBucket(name){
+  const b=TRCACHE[name]||{}; UI={};
+  Object.keys(b).forEach(k=>{ if(k.slice(0,2)==='s.') UI[k.slice(2)]=b[k];
+    else if(k.slice(0,3)==='mn.'||k.slice(0,3)==='ms.') UI[k]=b[k]; });
+  applyStrings();
+}
+async function translateUI(name,code){
+  const b=trBucket(name), keys=[], src=[];
+  Object.keys(STR).forEach(k=>{ if(!b['s.'+k]){ keys.push('s.'+k); src.push(STR[k]); } });
+  MOODS.forEach(m=>{ if(!b['mn.'+m[0]]){ keys.push('mn.'+m[0]); src.push(m[1]); }
+                     if(!b['ms.'+m[0]]){ keys.push('ms.'+m[0]); src.push(m[2]); } });
+  if(!keys.length) return true;
+  const got=await translateMany(src,code);
+  let n=0; got.forEach((g,i)=>{ if(g){ b[keys[i]]=g; n++; } });
+  saveTr();
+  return n>0;
+}
+/* the stories follow too, one at a time, as you reach them */
+function storyFor(i){
+  const st=STORIES[i], b=TRCACHE[LANGNAME], o=b&&b['st.'+i];
+  return o?{t:o.t||st.t,b:o.b||st.b,h:o.h||st.h,r:o.r||st.r,s:st.s,k:st.k}:st;
+}
+async function wantStory(i){
+  const code=codeFor(LANGNAME);
+  if(!code||code==='en') return;
+  const b=trBucket(LANGNAME); if(b['st.'+i]) return;
+  const st=STORIES[i];
+  const got=await translateMany([st.t,st.b,st.h,st.r],code);
+  if(!got[1]) return;
+  b['st.'+i]={t:got[0]||st.t,b:got[1],h:got[2]||st.h,r:got[3]||st.r}; saveTr();
+  if(CUR&&CUR.type==='story'&&CUR.i===i){ CUR.story=storyFor(i); paintStory(); }
+  renderFavourites();
+}
+
 /* ══ state ══ */
 const S={ edition:'built-in', dir:'ltr', mood:null, mode:'verse', pool:'curated',
           theme:store.get('theme')||'dark', font:store.get('font')||'nur',
@@ -1029,12 +1774,25 @@ function applySize(){
   document.documentElement.style.setProperty('--verse-size',m[S.size]);
 }
 
-/* ══ bags ══ */
-let verseBag=null, storyBag=new Bag(STORIES.map((_,i)=>i));
+/* ══ the pool the deck is dealt from ══ */
+let POOL=[], POOLKEY='curated';
+const STORYIDS=STORIES.map((_,i)=>i);
 function rebuildBag(){
-  if(S.pool==='all' && fullQuran) verseBag=new Bag(fullQuran.map((_,i)=>i));
-  else verseBag=new Bag(V.map((v,i)=>i).filter(i=>!S.mood || V[i][2].split(' ').indexOf(S.mood)>=0));
+  if(S.pool==='all' && fullQuran){ POOLKEY='all:'+S.edition; POOL=fullQuran.map((_,i)=>i); }
+  else{ POOLKEY=S.mood?('mood:'+S.mood):'curated';
+    POOL=V.map((v,i)=>i).filter(i=>!S.mood || V[i][2].split(' ').indexOf(S.mood)>=0); }
 }
+function verseAt(i){
+  if(S.pool==='all' && fullQuran){ const v=fullQuran[i], text=v.text.trim();
+    return {c:v.chapter,a:v.verse,text,group:classify(text,v.chapter*31+v.verse)}; }
+  const row=V[i], text=textFor(row[0],row[1],row[4]);
+  /* what the verse itself pictures comes first; the hand-written tag is the
+     fallback for verses that name nothing you can draw */
+  return {c:row[0],a:row[1],text,
+          group:classified(text)||row[3]||SPREAD[(row[0]*31+row[1])%SPREAD.length]};
+}
+const verseMeta=i=>{ const v=verseAt(i); return {k:'v:'+v.c+':'+v.a,s:v.c,g:v.group}; };
+const storyMeta=i=>({k:'s:'+i,s:STORIES[i].k[0],g:STORIES[i].s});
 const textFor=(c,a,fb)=>{ const m=EDCACHE[S.edition]; const h=m&&m[(c-1)*1000+a]; return h||fb; };
 const indexEdition=arr=>{ const m={}; arr.forEach(v=>{m[(v.chapter-1)*1000+v.verse]=v.text.trim();}); return m; };
 
@@ -1054,15 +1812,9 @@ function paintVerse(){
   refEl.style.display=S.showRef==='on'?'':'none';
 }
 function showVerse(first){
-  let c,a,text,group;
-  if(S.pool==='all' && fullQuran){
-    const v=fullQuran[verseBag.next()];
-    c=v.chapter; a=v.verse; text=v.text.trim(); group=classify(text,c*31+a);
-  }else{
-    const row=V[verseBag.next()];
-    c=row[0]; a=row[1]; group=row[3]; text=textFor(c,a,row[4]);
-    if(S.edition!=='built-in') group=classify(text,c*31+a);
-  }
+  const i=draw(POOLKEY,POOL,verseMeta);
+  if(i==null) return;
+  const {c,a,text,group}=verseAt(i);
   CUR={type:'verse',c,a,text,key:'v:'+c+':'+a};
   setSceneIdx(S.sceneMode==='verse'?sceneForGroup(group,c*31+a):sceneForGroup('night',0));
   if(first){ paintVerse(); slab.classList.add('in');
@@ -1078,11 +1830,13 @@ function paintStory(){
   refEl.innerHTML=esc(st.r)+(isLiked(CUR.key)?'<span class="liked">♥</span>':'');
 }
 function showStory(idx){
-  const i = (idx==null) ? storyBag.next() : idx;
+  const i = (idx==null) ? draw('stories',STORYIDS,storyMeta) : idx;
+  if(i==null) return;
   const base=STORIES[i];
-  CUR={type:'story',i,story:base,key:'s:'+i};
+  CUR={type:'story',i,story:storyFor(i),key:'s:'+i};
   setSceneIdx(S.sceneMode==='verse'?sceneForGroup(base.s,base.t.length):sceneForGroup('night',0));
   swap(paintStory);
+  wantStory(i);           /* fetch its translation if we are not in English */
 }
 const advance=()=>S.mode==='story'?showStory():showVerse(false);
 
@@ -1092,20 +1846,21 @@ const heartfx=document.getElementById('heartfx');
 function toggleLike(){
   if(!CUR) return;
   const at=likes.findIndex(l=>l.k===CUR.key);
-  if(at>=0){ likes.splice(at,1); }
+  if(at>=0){ likes.splice(at,1); toast(t('fav.removed')); }
   else{
     likes.unshift(CUR.type==='verse'?{k:CUR.key,type:'verse',c:CUR.c,a:CUR.a}:{k:CUR.key,type:'story',i:CUR.i});
     heartfx.classList.remove('beat'); void heartfx.offsetWidth; heartfx.classList.add('beat');
     setTimeout(()=>heartfx.classList.remove('beat'),1150);
+    toast(t('fav.added'));
   }
   store.set('likes',likes);
   CUR.type==='verse'?paintVerse():paintStory();
-  renderHearted();
+  renderFavourites();
 }
-function renderHearted(){
-  const box=document.getElementById('heartlist'); if(!box) return;
-  if(!likes.length){ box.innerHTML=`<p class="empty">${esc(t('hearted.empty'))}</p>`; return; }
-  box.innerHTML=`<div class="gtitle">${likes.length} ${esc(t('hearted.count'))}</div><div class="hlist">`+
+function renderFavourites(){
+  const box=document.getElementById('favlist'); if(!box) return;
+  if(!likes.length){ box.innerHTML=`<p class="empty">${esc(t('fav.empty'))}</p>`; return; }
+  box.innerHTML=`<div class="gtitle">${likes.length} ${esc(t('fav.count'))}</div><div class="hlist">`+
     likes.map((l,n)=>{
       let body,ref;
       if(l.type==='verse'){
@@ -1113,16 +1868,16 @@ function renderHearted(){
         body=textFor(l.c,l.a,row?row[4]:'');
         ref=SURAHS[l.c-1]+' · '+l.c+':'+l.a;
       }else{
-        const st=STORIES[l.i];
+        const st=storyFor(l.i);
         body=st.t; ref=st.r;
       }
       return `<div class="hitem"><button class="h-t" data-open-h="${n}" style="text-align:start">${esc(body).slice(0,240)}
         <span class="h-r">${esc(ref)}</span></button><button class="h-x" data-del-h="${n}" aria-label="Remove">✕</button></div>`;
     }).join('')+'</div>';
 }
-document.getElementById('heartlist').addEventListener('click',e=>{
+document.getElementById('favlist').addEventListener('click',e=>{
   const d=e.target.closest('[data-del-h]'), o=e.target.closest('[data-open-h]');
-  if(d){ likes.splice(+d.dataset.delH,1); store.set('likes',likes); renderHearted();
+  if(d){ likes.splice(+d.dataset.delH,1); store.set('likes',likes); renderFavourites();
          if(CUR) (CUR.type==='verse'?paintVerse():paintStory()); return; }
   if(o){ const l=likes[+o.dataset.openH]; closePanels();
     if(l.type==='story'){ S.mode='story'; setPill(t('pill.stories')); showStory(l.i); }
@@ -1135,13 +1890,52 @@ document.getElementById('heartlist').addEventListener('click',e=>{
 /* ══ sheets ══ */
 const sheet=document.getElementById('sheet'), sheetTitle=document.getElementById('sheet-title'),
       sheetBody=document.getElementById('sheet-body');
+const scard=sheet.querySelector('.scard');
 function openSheet(title,html){
   sheetTitle.textContent=title; sheetBody.style.direction=''; sheetBody.innerHTML=html;
-  sheet.classList.add('on');
-  const card=sheet.querySelector('.scard'); if(card) card.scrollTop=0;
+  sheet.classList.remove('closing'); scard.classList.remove('dragging'); scard.style.transform='';
+  sheet.classList.add('on'); scard.scrollTop=0;
 }
-function closeSheet(){ sheet.classList.remove('on'); EXPV=null; }
+function closeSheet(){
+  if(!sheet.classList.contains('on')) return;
+  EXPV=null;
+  scard.classList.remove('dragging'); scard.style.transform='';
+  sheet.classList.add('closing');
+  setTimeout(()=>{ sheet.classList.remove('on','closing'); },320);
+}
 sheet.addEventListener('click',e=>{ if(e.target.closest('[data-sclose]')) closeSheet(); });
+
+/* pull the sheet back down to close it */
+let sy=null, sdy=0, sTop=0;
+scard.addEventListener('touchstart',e=>{
+  if(e.touches.length!==1) return;
+  sy=e.touches[0].clientY; sdy=0; sTop=scard.scrollTop;
+},{passive:true});
+scard.addEventListener('touchmove',e=>{
+  if(sy==null) return;
+  sdy=e.touches[0].clientY-sy;
+  if(sdy>0 && sTop<=0){ scard.classList.add('dragging');
+    scard.style.transform='translateY('+(sdy*.72)+'px)';
+    scard.style.opacity=String(Math.max(.35,1-sdy/460)); }
+},{passive:true});
+scard.addEventListener('touchend',()=>{
+  if(sy==null) return;
+  const go = sdy>96 && sTop<=0;
+  sy=null; scard.style.opacity='';
+  if(go){ closeSheet(); return; }
+  scard.classList.remove('dragging'); scard.style.transform='';
+},{passive:true});
+
+/* the small word that shows when you keep something */
+const toastEl=document.getElementById('toast');
+let toastTimer=null;
+function toast(msg){
+  const h=document.getElementById('hint'); if(h) h.classList.remove('on');
+  toastEl.textContent=msg;
+  toastEl.classList.remove('on'); void toastEl.offsetWidth; toastEl.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>toastEl.classList.remove('on'),2200);
+}
 
 /* ══ explain the verse in front of you, from a published tafsir ══ */
 let EXPV=null;   /* {c,a,ed,text,short,cut,open,deep,deepOpen,deepBusy} */
@@ -1273,9 +2067,8 @@ bloom.addEventListener('click',e=>{
   const b=e.target.closest('[data-open]'); if(!b) return; e.stopPropagation();
   const w=b.dataset.open;
   if(w==='stories'){ S.mode='story'; setPill(t('pill.stories')); setBloom(false); showStory(); return; }
-  if(w==='explain'){ setBloom(false); explain(); return; }
   if(w==='language') buildLangs();
-  if(w==='hearted') renderHearted();
+  if(w==='favorites') renderFavourites();
   openPanel(w);
 });
 function setPill(l){ if(!l){pill.classList.remove('on');return;} pillLabel.textContent=l; pill.classList.add('on'); }
@@ -1284,14 +2077,22 @@ document.getElementById('pill-clear').addEventListener('click',e=>{
   setPill(null); rebuildBag(); showVerse(false);
 });
 
-/* ══ gestures: tap = next · double tap = heart · swipe up = explain ══ */
+/* ══ gestures: tap = next · double tap = keep · swipe up = explain, swipe down = close ══ */
 let tapTimer=null, lastTap=0, tStartY=null, tStartX=null, tStartT=0, swiped=false;
 stage.addEventListener('touchstart',e=>{ const p=e.touches[0]; tStartY=p.clientY; tStartX=p.clientX; tStartT=Date.now(); swiped=false; },{passive:true});
 stage.addEventListener('touchend',e=>{
   if(tStartY==null) return;
   const p=e.changedTouches[0], dy=p.clientY-tStartY, dx=p.clientX-tStartX, dt=Date.now()-tStartT;
   tStartY=null;
-  if(dy<-70 && Math.abs(dx)<60 && dt<700){ swiped=true; clearTimeout(tapTimer); tapTimer=null; explain(); }
+  if(Math.abs(dx)>70 || dt>700) return;
+  if(dy<-64){ swiped=true; clearTimeout(tapTimer); tapTimer=null; explain(); }
+  else if(dy>64 && sheet.classList.contains('on')){ swiped=true; closeSheet(); }
+},{passive:true});
+/* the same two moves with a mouse wheel or trackpad, for anyone on a desktop */
+let wheelLock=0;
+stage.addEventListener('wheel',e=>{
+  const now=Date.now(); if(now<wheelLock) return;
+  if(e.deltaY<-42){ wheelLock=now+900; explain(); }
 },{passive:true});
 stage.addEventListener('click',()=>{
   if(swiped){ swiped=false; return; }
@@ -1302,10 +2103,11 @@ stage.addEventListener('click',()=>{
   tapTimer=setTimeout(()=>{ tapTimer=null; advance(); },250);
 });
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){ closeSheet(); closePanels(); setBloom(false); }
-  if(document.querySelector('.panel.on')||sheet.classList.contains('on')) return;
+  if(e.key==='Escape'){ closeSheet(); closePanels(); setBloom(false); return; }
+  if(sheet.classList.contains('on')){ if(e.key==='ArrowDown'){ e.preventDefault(); closeSheet(); } return; }
+  if(document.querySelector('.panel.on')) return;
   if(e.key==='ArrowRight'||e.key===' ') { e.preventDefault(); advance(); }
-  if(e.key==='ArrowUp') explain();
+  if(e.key==='ArrowUp'){ e.preventDefault(); explain(); }
   if(e.key==='l'||e.key==='L') toggleLike();
 });
 
@@ -1339,8 +2141,9 @@ langlist.addEventListener('click',async e=>{
   const b=e.target.closest('.lang'); if(!b) return;
   const id=b.dataset.id, ln=b.dataset.lang||'English';
   if(id==='built-in'){ S.edition='built-in'; S.dir='ltr'; fullQuran=null;
-    if(S.pool==='all'){S.pool='curated';} await setLanguage('English'); rebuildBag();
-    renderLangs(langsearch.value.trim().toLowerCase()); closePanels(); showVerse(false); return; }
+    if(S.pool==='all'){S.pool='curated';} rebuildBag();
+    renderLangs(langsearch.value.trim().toLowerCase()); closePanels(); showVerse(false);
+    setLanguage('English'); return; }
   if(!EDCACHE[id]){
     const lab=b.querySelector('.l-t'), prev=lab.textContent; lab.textContent=t('lang.downloading');
     try{ const j=await fetchJSON('editions/'+id+'.min.json');
@@ -1354,15 +2157,33 @@ langlist.addEventListener('click',async e=>{
     l.href='https://fonts.googleapis.com/css2?family=Amiri:wght@400&display=swap'; document.head.appendChild(l);
   }
   rebuildBag(); closePanels(); showVerse(false);
-  await setLanguage(ln);
   renderLangs(langsearch.value.trim().toLowerCase());
+  setLanguage(ln);          /* the page follows, without holding up the verse */
 });
 
-/* the chosen language decides the verse and the tafsir; the menus stay in English */
-function setLanguage(name){
-  LANGNAME=name;
-  document.documentElement.setAttribute('lang',name==='English'?'en':'');
-  EXPV=null;
+/* the chosen language changes the whole page, not only the verse */
+async function setLanguage(name){
+  LANGNAME=name; EXPV=null;
+  const code=codeFor(name)||'en';
+  store.set('lang',{name});
+  store.set('edition',{id:S.edition,dir:S.dir});
+  document.documentElement.setAttribute('lang',code);
+  document.documentElement.setAttribute('dir',RTLCODES.has(code)?'rtl':'ltr');
+  if(code==='en'){ UI={}; applyStrings(); return; }
+  applyBucket(name);                       /* anything already on the device, at once */
+  if(trBusy) return;
+  trBusy=true; setTrNote(t('lang.translating'));
+  try{
+    const ok=await translateUI(name,code);
+    applyBucket(name);
+    setTrNote(ok?'':t('lang.trFailed'));
+  }catch(e){ setTrNote(t('lang.trFailed')); }
+  finally{ trBusy=false; }
+  if(CUR&&CUR.type==='story') wantStory(CUR.i);
+}
+function setTrNote(msg){
+  const n=document.getElementById('langnote'); if(!n) return;
+  n.innerHTML=msg?`<b>${esc(msg)}</b>`:esc(t('lang.note'));
 }
 
 /* ══ settings, built here so every label can be translated ══ */
@@ -1399,7 +2220,7 @@ function buildSettings(){
     if(EXPV){ const [s,cut]=shorten(EXPV.text,v==='long'?100000:620);
       EXPV.short=s; EXPV.cut=cut; EXPV.open=(v==='long'); paintExplain(); } });
   document.getElementById('clearlikes').addEventListener('click',()=>{
-    likes=[]; store.set('likes',likes); renderHearted(); if(CUR)(CUR.type==='verse'?paintVerse():paintStory());
+    likes=[]; store.set('likes',likes); renderFavourites(); if(CUR)(CUR.type==='verse'?paintVerse():paintStory());
   });
 }
 function wire(id,fn){
@@ -1428,24 +2249,24 @@ async function setPool(v){
 function wireBack(id,v){ const el=document.getElementById(id); if(el)
   el.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===v))); }
 
-/* ══ about ══ */
+/* ══ about — written from the strings, so it follows the language too ══ */
 function buildAbout(){
   const box=document.getElementById('aboutbody'); if(!box) return;
-  box.innerHTML=`
-  <p class="lede" style="max-width:52ch">Usama built this because of a small, ordinary problem: the Qur'an has an answer for almost every state a heart can be in, and almost nobody can find it in the moment they need it. When you are frightened at two in the morning, or ashamed of something you did, or so tired you cannot pray properly, you do not want to search. You want to be met. So he made a page with one verse on it, a dot in the corner, and nothing else in the way — no account, no feed, no counting of days. Open it, and something is already waiting for you. Tap, and something else comes. That is the whole idea, and he kept it that small on purpose.</p>
-
-  <div class="gtitle">Where the words come from</div>
-  <p class="foot" style="margin-top:0">The English is the <b>Rowwad Translation Center</b> edition, published for free distribution by quranenc.com, and it is written into this page — it works with no connection at all. Every other language is a published scholarly translation drawn from the open Qur'an dataset at <a href="https://github.com/fawazahmed0/quran-api" target="_blank" rel="noopener">github.com/fawazahmed0/quran-api</a>, which carries 490 translations across 98 languages, sourced from quranenc.com, tanzil.net and the King Fahd Complex. No verse here is machine-translated. The 377 chosen verses were read and tagged one by one; the stories are short retellings written to send you back to the surah itself, not to replace it.</p>
-
-  <div class="gtitle">Where the explanations come from</div>
-  <p class="foot" style="margin-top:0">Swipe up on a verse and you are shown a <b>published tafsir</b> — nothing is written by a machine, and nothing you do here is sent anywhere. The short reading is <b>Al-Mukhtasar fi Tafsir al-Qur'an al-Karim</b>, the abridged commentary by the Tafsir Center for Quranic Studies, which is only a few sentences per verse by design. Under it you can open a fuller one — <b>Tafsir Ibn Kathir</b> in English, and the equivalent where a language has one. Both are served as plain files from the open collection at <a href="https://github.com/spa5k/tafsir_api" target="_blank" rel="noopener">github.com/spa5k/tafsir_api</a>, sourced from quran.com, free and with no account or key of any kind. A verse you have read once is kept on this device and opens again with no connection. Still: an abridgement is an abridgement. Read the verse inside its surah, and take anything that matters to a person of knowledge.</p>
-
-  <div class="gtitle">A word, for whoever is reading</div>
-  <p class="foot" style="margin-top:0">Do not let an app stand in for the Book. This is a doorway, and a narrow one — six lines on a screen. The Qur'an was given to be recited slowly, in Arabic if you can, sitting still, and returned to daily even when you feel nothing. Learn a little of the language; even ten words changes how a verse lands. Read a verse in its surah, not alone, because context is half the meaning. And when something here catches you, do not stop at the feeling — take it to a teacher, and act on one small thing before you look for the next verse. Consistency, however small, is loved more than intensity that burns out. Whatever good you find in this, it is from Allah; whatever error, from us, and we ask forgiveness for it.</p>
-
-  <div class="gtitle">Contact</div>
-  <p class="foot" style="margin-top:0">Corrections, mistakes in a translation, a mood that is missing, or an idea worth building — Usama would like to hear it.<br>
-  <a href="https://x.com/a1wai" target="_blank" rel="noopener" style="font-family:var(--f-display);font-size:1.2rem">@a1wai</a> on X</p>`;
+  const sec=(title,body)=>`<div class="gtitle">${esc(t(title))}</div>
+    <p class="foot" style="margin-top:0">${esc(t(body))}</p>`;
+  box.innerHTML=
+    `<p class="lede" style="max-width:52ch">${esc(t('about.lede'))}</p>`+
+    sec('about.words','about.wordsBody')+
+    sec('about.exp','about.expBody')+
+    sec('about.lang','about.langBody')+
+    sec('about.word','about.wordBody')+
+    `<div class="gtitle">${esc(t('about.contact'))}</div>
+     <p class="foot" style="margin-top:0">${esc(t('about.contactBody'))}<br>
+     <a href="https://x.com/a1wai" target="_blank" rel="noopener" style="font-family:var(--f-display);font-size:1.2rem">@a1wai</a> on X</p>
+     <p class="foot" style="opacity:.7">
+       <a href="https://github.com/fawazahmed0/quran-api" target="_blank" rel="noopener">quran-api</a> ·
+       <a href="https://github.com/spa5k/tafsir_api" target="_blank" rel="noopener">tafsir_api</a> ·
+       <a href="https://quranenc.com" target="_blank" rel="noopener">quranenc.com</a></p>`;
 }
 
 /* ══ start ══ */
@@ -1454,10 +2275,39 @@ motionOn=(S.motion==='on');
 if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){ motionOn=false; S.motion='off'; }
 sizeCanvas();
 setSceneIdx(sceneForGroup('stars',0));
+loadDeck();
 rebuildBag();
-applyStrings();
+
+/* the language you were last reading in comes back with you, from this
+   device, with no connection: the interface at once, the verses as soon
+   as the edition has been fetched again */
+const SAVEDLANG=store.get('lang'), SAVEDED=store.get('edition');
+if(SAVEDLANG && SAVEDLANG.name && codeFor(SAVEDLANG.name)!=='en'){
+  LANGNAME=SAVEDLANG.name;
+  const c=codeFor(LANGNAME)||'en';
+  document.documentElement.setAttribute('lang',c);
+  document.documentElement.setAttribute('dir',RTLCODES.has(c)?'rtl':'ltr');
+  applyBucket(LANGNAME);
+}else applyStrings();
+
 requestAnimationFrame(frame);
 showVerse(true);
+
+if(SAVEDED && SAVEDED.id && SAVEDED.id!=='built-in'){
+  (async()=>{
+    try{
+      const j=await fetchJSON('editions/'+SAVEDED.id+'.min.json');
+      EDCACHE[SAVEDED.id]=indexEdition(j.quran); EDCACHE['_arr_'+SAVEDED.id]=j.quran;
+      S.edition=SAVEDED.id; S.dir=SAVEDED.dir||'ltr';
+      if(SAVEDED.id.slice(0,3)==='ara' && !document.getElementById('fp-scribe')){
+        const l=document.createElement('link'); l.id='fp-scribe'; l.rel='stylesheet';
+        l.href='https://fonts.googleapis.com/css2?family=Amiri:wght@400&display=swap'; document.head.appendChild(l);
+      }
+      if(CUR && CUR.type==='verse'){ CUR.text=textFor(CUR.c,CUR.a,CUR.text); paintVerse(); }
+      renderFavourites();
+    }catch(e){}
+  })();
+}
 const hintEl=document.getElementById('hint');
 if(!store.get('seen')){ store.set('seen',1);
   setTimeout(()=>hintEl.classList.add('on'),1400);
