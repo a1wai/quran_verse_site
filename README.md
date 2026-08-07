@@ -25,9 +25,9 @@ procedure. GitHub Pages, Netlify, a folder on a phone — all the same.
 Translation Center English edition, written into the page so the app works with
 no connection at all.
 
-**63 stories** — short retellings of Qur'anic accounts, each one carrying the key
-verse it turns on, so an explanation can be opened for a story the same way it
-can for a verse.
+**63 events** — short retellings of Qur'anic accounts (the menu calls them
+Events), each one carrying the key verse it turns on, so an explanation can be
+opened for an event the same way it can for a verse.
 
 **Whole Qur'an mode** — all 6,236 verses, fetched once from the open dataset at
 [fawazahmed0/quran-api](https://github.com/fawazahmed0/quran-api).
@@ -64,8 +64,8 @@ same sky twice in a row.
 
 ## Explanations
 
-Swipe up on a verse (or press ↑, or scroll up) and the page blurs and a sheet
-slides up with a published tafsir for that verse. Swipe back down — or drag the
+Swipe up on a verse (or press ↑, or scroll up, or choose Explain in the menu)
+and the page blurs and a sheet slides up with a published tafsir for that verse. Swipe back down — or drag the
 sheet down, or press ↓, or Escape — and it slides away.
 
 - The short reading is **Al-Mukhtasar fi Tafsir al-Qur'an al-Karim**, the
@@ -88,7 +88,7 @@ version is deleted from the device on load.
 ## Languages
 
 Choosing a language changes the whole page — the verse, the menus, the moods,
-the settings, the About text and the stories — and the layout flips to
+the settings, the About text and the events — and the layout flips to
 right-to-left for Arabic, Urdu, Persian, Pashto, Uyghur, Kurdish, Sindhi, Hebrew
 and Dhivehi.
 
@@ -96,10 +96,15 @@ Two different things are happening, and the difference matters:
 
 - **The verse** is always a published human translation by scholars. It is never
   machine translated.
-- **The page around it** — menus, moods, settings, About, and the story
+- **The page around it** — menus, moods, settings, About, and the event
   retellings — is machine translated once, by a free keyless service, and then
   kept on the device. Coming back to a language you have used before is instant
   and works offline.
+
+An event is never shown in English and then swapped underneath you: it is only
+painted once its own language is in hand. To keep that from being a wait, the
+whole set is fetched quietly in the background the moment a language is chosen,
+and the next card in the deck is always fetched before you can reach it.
 
 The interface translation tries Google's public `translate_a` endpoint first,
 falls back to MyMemory, and falls back again to per-string requests. **If all of
@@ -121,7 +126,7 @@ next time you open the page.
 | Double tap | Save to favorites (with a small confirmation) |
 | Swipe up | Explanation slides up, background blurs |
 | Swipe down | Explanation slides away |
-| The glowing dot | The menu — everything behind it blurs |
+| The glowing dot | The menu — everything behind it blurs. Explain is in there too |
 | → or Space | Next verse |
 | ↑ / ↓ | Open / close the explanation |
 | L | Save to favorites |

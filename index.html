@@ -305,8 +305,9 @@ html[data-theme="light"] #toast{background:rgba(247,244,237,.82)}
   <button data-open="settings" data-i18n="menu.settings">Settings</button>
   <button data-open="language" data-i18n="menu.language">Language</button>
   <button data-open="favorites" data-i18n="menu.favorites">Favorites</button>
-  <button data-open="stories" data-i18n="menu.stories">Stories</button>
+  <button data-open="stories" data-i18n="menu.stories">Events</button>
   <button data-open="mood" data-i18n="menu.mood">Mood</button>
+  <button data-open="explain" data-i18n="menu.explain">Explain</button>
 </nav>
 
 <div id="dotwrap"><button id="dot" aria-expanded="false" aria-controls="bloom" aria-label="Open menu"></button></div>
@@ -1428,8 +1429,8 @@ const store={
 
 /* ══ interface strings — English is the source, everything else is translated once and cached ══ */
 const STR={
-'menu.mood':'Mood','menu.stories':'Stories','menu.favorites':'Favorites','menu.language':'Language',
-'menu.settings':'Settings','menu.about':'About',
+'menu.mood':'Mood','menu.stories':'Events','menu.favorites':'Favorites','menu.language':'Language',
+'menu.settings':'Settings','menu.about':'About','menu.explain':'Explain',
 'mood.title':'Mood',
 'mood.lede':"Name where you are right now. You'll be given verses that meet you there, in a different order every time.",
 'mood.share':'Say it in your own words',
@@ -1473,7 +1474,7 @@ const STR={
 'sheet.failed':'That commentary could not be reached just now — it needs a connection the first time you open a verse. Try again in a moment.',
 'sheet.noVerse':'This one has no single verse to explain. Open any verse and swipe up.',
 'hint':'Tap for another · Double tap to save · Swipe up to understand',
-'pill.all':"Whole Qur'an",'pill.stories':'Stories','pill.favorites':'Favorites',
+'pill.all':"Whole Qur'an",'pill.stories':'Events','pill.favorites':'Favorites',
 'about.lede':"Usama built this because of a small, ordinary problem: the Qur'an has an answer for almost every state a heart can be in, and almost nobody can find it in the moment they need it. When you are frightened at two in the morning, or ashamed of something you did, or so tired you cannot pray properly, you do not want to search. You want to be met. So he made a page with one verse on it, a dot in the corner, and nothing else in the way — no account, no feed, no counting of days. Open it, and something is already waiting for you. Tap, and something else comes. That is the whole idea, and he kept it that small on purpose.",
 'about.words':'Where the words come from',
 'about.wordsBody':"The English is the Rowwad Translation Center edition, published for free distribution by quranenc.com, and it is written into this page — it works with no connection at all. Every other language is a published scholarly translation drawn from the open Qur'an dataset at github.com/fawazahmed0/quran-api, which carries 490 translations across 98 languages, sourced from quranenc.com, tanzil.net and the King Fahd Complex. No verse here is machine-translated. The 377 chosen verses were read and tagged one by one; the stories are short retellings written to send you back to the surah itself, not to replace it.",
@@ -1637,12 +1638,13 @@ function codeFor(name){
   for(const n in LANGCODE) if(k.indexOf(n)===0) return LANGCODE[n];
   return null;
 }
-const TRCACHE=store.get('trcache')||{};
+store.del('trcache');                     /* wording changed — old machine translations retired */
+const TRCACHE=store.get('trcache2')||{};
 const trBucket=n=>TRCACHE[n]||(TRCACHE[n]={});
 function saveTr(){
   const langs=Object.keys(TRCACHE);
   if(langs.length>5) langs.slice(0,langs.length-5).forEach(l=>{ if(l!==LANGNAME) delete TRCACHE[l]; });
-  store.set('trcache',TRCACHE);
+  store.set('trcache2',TRCACHE);
 }
 async function tfetch(url){
   const ac=(typeof AbortController!=='undefined')?new AbortController():null;
@@ -1709,21 +1711,63 @@ async function translateUI(name,code){
   saveTr();
   return n>0;
 }
-/* the stories follow too, one at a time, as you reach them */
+/* ── the events follow too ──
+   Nothing is ever shown in English and then swapped underneath you:
+   an event is only painted once its own language is ready. To keep
+   that from being a wait, the whole set is fetched quietly in the
+   background as soon as a language is chosen, and the next card in
+   the deck is always fetched before you can reach it. */
 function storyFor(i){
   const st=STORIES[i], b=TRCACHE[LANGNAME], o=b&&b['st.'+i];
   return o?{t:o.t||st.t,b:o.b||st.b,h:o.h||st.h,r:o.r||st.r,s:st.s,k:st.k}:st;
 }
-async function wantStory(i){
+function storyReady(i){
   const code=codeFor(LANGNAME);
-  if(!code||code==='en') return;
-  const b=trBucket(LANGNAME); if(b['st.'+i]) return;
+  if(!code||code==='en') return true;
+  const b=TRCACHE[LANGNAME];
+  return !!(b&&b['st.'+i]);
+}
+const STORYJOBS={};
+function wantStory(i){
+  const code=codeFor(LANGNAME);
+  if(!code||code==='en'||storyReady(i)) return Promise.resolve();
+  const jobKey=LANGNAME+'|'+i;
+  if(STORYJOBS[jobKey]) return STORYJOBS[jobKey];
   const st=STORIES[i];
-  const got=await translateMany([st.t,st.b,st.h,st.r],code);
-  if(!got[1]) return;
-  b['st.'+i]={t:got[0]||st.t,b:got[1],h:got[2]||st.h,r:got[3]||st.r}; saveTr();
-  if(CUR&&CUR.type==='story'&&CUR.i===i){ CUR.story=storyFor(i); paintStory(); }
-  renderFavourites();
+  const job=(async()=>{
+    try{
+      const got=await translateMany([st.t,st.b,st.h,st.r],code);
+      if(!got[1]) return;
+      trBucket(LANGNAME)['st.'+i]={t:got[0]||st.t,b:got[1],h:got[2]||st.h,r:got[3]||st.r};
+      saveTr();
+      if(CUR&&CUR.type==='story'&&CUR.i===i){ CUR.story=storyFor(i); paintStory(); }
+      renderFavourites();
+    }catch(e){}
+    finally{ delete STORYJOBS[jobKey]; }
+  })();
+  STORYJOBS[jobKey]=job;
+  return job;
+}
+/* the card the deck will hand you next, so it is ready before you tap */
+function peekStory(){
+  const d=DECKS['stories'];
+  return (d&&d.length)?d[d.length-1]:null;
+}
+/* every event, quietly, once — after this a language is fully offline */
+let prefetching=null;
+async function prefetchStories(){
+  const code=codeFor(LANGNAME);
+  if(!code||code==='en'||prefetching) return;
+  const lang=LANGNAME;
+  prefetching=(async()=>{
+    for(let i=0;i<STORIES.length;i++){
+      if(LANGNAME!==lang) break;              /* the language changed under us */
+      if(storyReady(i)) continue;
+      await wantStory(i);
+      await new Promise(r=>setTimeout(r,120));
+    }
+    prefetching=null;
+  })();
 }
 
 /* ══ state ══ */
@@ -1829,14 +1873,39 @@ function paintStory(){
   refEl.style.display='';
   refEl.innerHTML=esc(st.r)+(isLiked(CUR.key)?'<span class="liked">♥</span>':'');
 }
-function showStory(idx){
+async function showStory(idx){
   const i = (idx==null) ? draw('stories',STORYIDS,storyMeta) : idx;
   if(i==null) return;
   const base=STORIES[i];
   CUR={type:'story',i,story:storyFor(i),key:'s:'+i};
   setSceneIdx(S.sceneMode==='verse'?sceneForGroup(base.s,base.t.length):sceneForGroup('night',0));
-  swap(paintStory);
-  wantStory(i);           /* fetch its translation if we are not in English */
+
+  if(storyReady(i)){ swap(paintStory); }
+  else{
+    /* hold the fade until its own language is in hand, rather than
+       showing English and changing it a moment later */
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    const pending=wantStory(i); let done=false; pending.then(()=>{done=true;});
+    slab.classList.add('out');
+    await wait(380);
+    if(!CUR||CUR.type!=='story'||CUR.i!==i) return;
+    if(!done){                                  /* the breathing line, while it comes */
+      slab.classList.remove('story');
+      verseEl.className=''; verseEl.innerHTML='<span class="pulse"></span>'; refEl.innerHTML='';
+      slab.classList.remove('out');
+      await Promise.race([pending,wait(7000)]);
+      slab.classList.add('out');
+      await wait(300);
+    }
+    if(!CUR||CUR.type!=='story'||CUR.i!==i) return;
+    CUR.story=storyFor(i);
+    paintStory();
+    slab.classList.remove('out'); slab.classList.add('in');
+    requestAnimationFrame(()=>requestAnimationFrame(()=>slab.classList.remove('in')));
+  }
+  const nxt=peekStory();                 /* have the next one ready before it is asked for */
+  if(nxt!=null) wantStory(nxt);
+  prefetchStories();
 }
 const advance=()=>S.mode==='story'?showStory():showVerse(false);
 
@@ -2067,6 +2136,7 @@ bloom.addEventListener('click',e=>{
   const b=e.target.closest('[data-open]'); if(!b) return; e.stopPropagation();
   const w=b.dataset.open;
   if(w==='stories'){ S.mode='story'; setPill(t('pill.stories')); setBloom(false); showStory(); return; }
+  if(w==='explain'){ setBloom(false); explain(); return; }
   if(w==='language') buildLangs();
   if(w==='favorites') renderFavourites();
   openPanel(w);
@@ -2177,6 +2247,7 @@ async function setLanguage(name){
     const ok=await translateUI(name,code);
     applyBucket(name);
     setTrNote(ok?'':t('lang.trFailed'));
+    prefetchStories();          /* the events, quietly, before they are asked for */
   }catch(e){ setTrNote(t('lang.trFailed')); }
   finally{ trBusy=false; }
   if(CUR&&CUR.type==='story') wantStory(CUR.i);
@@ -2288,6 +2359,7 @@ if(SAVEDLANG && SAVEDLANG.name && codeFor(SAVEDLANG.name)!=='en'){
   document.documentElement.setAttribute('lang',c);
   document.documentElement.setAttribute('dir',RTLCODES.has(c)?'rtl':'ltr');
   applyBucket(LANGNAME);
+  setTimeout(prefetchStories,1200);
 }else applyStrings();
 
 requestAnimationFrame(frame);
