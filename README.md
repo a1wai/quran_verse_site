@@ -13,6 +13,9 @@ Open it from a disk or drop it on any static host and it works.
 | `index.html` | The entire application — markup, styles, verse data, stories, scene engine, everything. |
 | `README.md` | This file. |
 | `.gitattributes` | Line-ending settings for the repository. |
+| `android/` | The Android app: a single activity that puts `index.html` on the screen, and the launcher icon. |
+| `tools/` | The APK build, which needs a JDK and nothing else. |
+| `dist/` | The built APK. |
 
 To deploy: put `index.html` where a web server can see it. That is the whole
 procedure. GitHub Pages, Netlify, a folder on a phone — all the same.
@@ -145,6 +148,73 @@ Everything you keep — favorites, settings, cached explanations, cached interfa
 translations, your deck and your recent memory — is stored on your device only,
 in `localStorage`, under keys beginning `nur.`. Nothing is sent anywhere and
 there is no analytics of any kind.
+
+---
+
+## The Android app
+
+`dist/nur-1.0.0.apk` is the whole thing as an installable app. The page is inside
+the APK, so it opens with no connection at all; the network is only ever used for
+the things that were already fetched — whole-Qur'an mode, the explanations, the
+interface translations, the fonts.
+
+Install it by copying it to the phone and opening it, allowing "install unknown
+apps" for whatever app you opened it from. **Android 7.0 or newer.**
+
+**One screen, and it stays put.** No status bar, no navigation bar, no address
+bar, no rotation, no pinch zoom, no scrollbars, no rubber-band at the edges, no
+long-press selection, and no layout jump when the keyboard opens. The verse does
+not move because something behind it moved. Panels and the explanation sheet still
+scroll inside themselves — a tafsir and a list of 98 languages have to — but
+nothing else does, and nothing scrolls the page underneath.
+
+Back closes whatever is open, exactly as Escape does on a keyboard. With nothing
+open it leaves the app without tearing it down, so coming back returns the verse
+you left rather than dealing a new one.
+
+The page is served to the WebView from inside the APK over a virtual
+`https://appassets.androidplatform.net` origin rather than a `file://` path. That
+gives it a real origin: `localStorage` that persists properly, ordinary CORS for
+the verse and tafsir requests, and a secure context. Nothing on the device's disk
+is reachable from the page.
+
+**The icon** is a niche with a lamp in it — Ayat an-Nur, three shapes. It ships as
+an adaptive icon (with a themed monochrome layer for Android 13 and up) drawn from
+vectors, plus PNGs at five densities for older launchers.
+`android/icon/nur-icon.svg` is the source; `tools/render-icons.sh` redraws the
+PNGs from it.
+
+### Building it
+
+```sh
+tools/build-apk.sh
+```
+
+A JDK 21 or newer, Python 3, and nothing else — **no Android SDK, no Gradle, no
+Android Studio**. The build fetches its own toolchain from Maven Central and caches
+it under `~/.cache/nur-android`:
+
+| Piece | Where it comes from |
+|---|---|
+| `aapt2` | `org.apktool:apktool-lib`, which ships the prebuilt binaries for Linux, macOS and Windows |
+| `dx` | `com.jakewharton.android.repackaged:dalvik-dx` |
+| `apksigner` | `com.android.tools.build:apksig`, driven by `tools/ApkSign.java` |
+| `android.jar` | `org.robolectric:android-all`, which doubles as aapt2's framework because it carries `resources.arsc` as well as the classes |
+| `zipalign` | `tools/zipalign.py` |
+
+Every download is checked against the `.sha1` Maven publishes beside it. The first
+build pulls about 200 MB (nearly all of it the framework jar) and later ones pull
+nothing.
+
+The APK is signed with an APK Signature Scheme v2 signature — hence Android 7.0,
+the first release that reads one. The key is made on first build at
+`android/keystore/nur.p12` and is deliberately **not** in the repository. Keep it:
+Android will only install an update over an app signed with the same key. To sign
+with your own instead, point `NUR_KEYSTORE`, `NUR_KEYSTORE_PASS` and
+`NUR_KEYSTORE_ALIAS` wherever you like.
+
+`.github/workflows/android.yml` runs the same script on every push that touches
+`index.html` or the app, and leaves the APK as a build artifact.
 
 ---
 

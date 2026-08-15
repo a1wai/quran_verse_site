@@ -1,0 +1,4 @@
+# APK build
+build/
+android/app/src/main/assets/
+android/keystore/
