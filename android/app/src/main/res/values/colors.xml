@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The bg custom property from index.html: the colour the page paints before anything else. -->
+    <color name="nur_night">#FF05070D</color>
+    <!-- The flat colour a launcher falls back to behind the adaptive icon. -->
+    <color name="nur_icon_background">#FF080D1E</color>
+</resources>

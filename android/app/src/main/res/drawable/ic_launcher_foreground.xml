@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  A niche, and in it a lamp. Ayat an-Nur reduced to three shapes so that it still reads at
+  48px: the glow, the light itself, and a two-centred pointed arch standing on its plinth.
+  Everything sits inside the 66dp circle every launcher mask is guaranteed to keep.
+
+  The same geometry, in the same 108-unit space, as android/icon/nur-icon.svg.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path android:pathData="M37,56 a17,17 0 1,0 34,0 a17,17 0 1,0 -34,0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="54"
+                android:centerY="56"
+                android:gradientRadius="17">
+                <item android:offset="0.0" android:color="#80FFE7BC" />
+                <item android:offset="0.36" android:color="#42A8BCFF" />
+                <item android:offset="0.72" android:color="#148FA7FF" />
+                <item android:offset="1.0" android:color="#008FA7FF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <path
+        android:pathData="M47.6,56 a6.4,6.4 0 1,0 12.8,0 a6.4,6.4 0 1,0 -12.8,0"
+        android:fillColor="#FFE7BC" />
+
+    <path
+        android:pathData="M39,77 L39,57 A30,30 0 0 1 54,31 A30,30 0 0 1 69,57 L69,77"
+        android:strokeColor="#AFC2FF"
+        android:strokeWidth="4.2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <path
+        android:pathData="M36,77 L72,77"
+        android:strokeColor="#AFC2FF"
+        android:strokeWidth="4.2"
+        android:strokeLineCap="round" />
+</vector>

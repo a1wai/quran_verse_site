@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Nur — the launcher mark.
+
+  A niche, and in it a lamp: Ayat an-Nur reduced to three shapes so that it still reads at
+  48px. A two-centred pointed arch on a plinth, a warm point of light, and the glow it
+  throws. This file is the source for the legacy (pre-Android-8) round PNG icons; the
+  adaptive icon in res/drawable draws the same geometry as vectors.
+
+  Render with tools/render-icons.sh.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <radialGradient id="night" cx="50%" cy="46%" r="74%">
+      <stop offset="0%" stop-color="#111A3A"/>
+      <stop offset="56%" stop-color="#080E20"/>
+      <stop offset="100%" stop-color="#05070D"/>
+    </radialGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFE7BC" stop-opacity="0.50"/>
+      <stop offset="36%" stop-color="#A8BCFF" stop-opacity="0.26"/>
+      <stop offset="72%" stop-color="#8FA7FF" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#8FA7FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <circle cx="96" cy="96" r="96" fill="url(#night)"/>
+  <circle cx="96" cy="96" r="94.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.07" stroke-width="3"/>
+
+  <!-- the mark, drawn in the same 108-unit space as the adaptive icon -->
+  <g transform="translate(96 96) scale(2.25) translate(-54 -54)">
+    <circle cx="54" cy="56" r="17" fill="url(#halo)"/>
+    <circle cx="54" cy="56" r="6.4" fill="#FFE7BC"/>
+    <path d="M39 77 L39 57 A30 30 0 0 1 54 31 A30 30 0 0 1 69 57 L69 77"
+          fill="none" stroke="#AFC2FF" stroke-width="4.2"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M36 77 L72 77" fill="none" stroke="#AFC2FF" stroke-width="4.2" stroke-linecap="round"/>
+  </g>
+</svg>
